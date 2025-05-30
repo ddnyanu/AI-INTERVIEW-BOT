@@ -1,0 +1,73 @@
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.env/
+.venv/
+ENV/
+env.bak/
+*.env
+
+# Flask-related files
+instance/
+*.db
+*.sqlite3
+
+# Logs
+*.log
+logs/
+*.pid
+
+# Audio/Video
+*.wav
+*.mp3
+*.mp4
+*.ogg
+audio_output/
+recordings/
+
+# Uploaded files (e.g., resumes, JDs)
+uploads/
+*.pdf
+*.doc
+*.docx
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Node modules (if using npm for frontend)
+node_modules/
+
+# VSCode / IDE files
+.vscode/
+.idea/
+
+# Coverage / Testing
+htmlcov/
+.tox/
+.nox/
+coverage.*
+.cache
+pytest_cache/
+
+# Reports and generated PDFs
+*.pdf
+*.zip
+report_output/
+generated_reports/
+
+# Mermaid or diagram files
+*.mmd
+
+# Deployment / container files
+*.pid
+*.sock
+
+# Frontend builds (if applicable)
+build/
+dist/
