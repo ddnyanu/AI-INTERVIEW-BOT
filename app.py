@@ -1128,34 +1128,8 @@ def reset_interview():
     return jsonify({"status": "success", "message": "Interview reset successfully"})
 
 
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-def save_report_as_pdf(report_text, candidate_name, folder="reports"):
-    folder_path = os.path.join(BASE_DIR, folder)
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-    
-    filename = f"{candidate_name}_interview_report.pdf".replace(" ", "_")
-    filepath = os.path.join(folder_path, filename)
-    
-    try:
-        c = canvas.Canvas(filepath, pagesize=letter)
-        width, height = letter
-
-        text_object = c.beginText(40, height - 50)
-        for line in report_text.splitlines():
-            text_object.textLine(line)
-        c.drawText(text_object)
-        c.save()
-        return filepath
-    except Exception as e:
-        logger.error(f"Failed to save PDF report: {e}")
-        return None
-
 
 
 from flask import send_from_directory
