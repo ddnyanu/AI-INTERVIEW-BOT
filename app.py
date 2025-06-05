@@ -25,7 +25,7 @@ def interview(token):
         response = requests.get(f"{DJANGO_API_URL}{token}/")
         if response.status_code == 200:
             data = response.json()
-            return render_template("interview.html", data=data)
+            return render_template("index.html", data=data)
         else:
             return render_template("error.html", message="Invalid or expired interview link."), 404
     except Exception as e:
