@@ -1,0 +1,16 @@
+
+Interview Report for Dnyaneshwar Dhotre Web Developer
+Role: Software Engineer
+Experience Level: fresher
+Years of Experience: 0
+
+Interview Duration: 2m 30s
+Average Rating: 0.0/10
+
+Conversation Transcript:
+bot: You've mentioned your experience with the CodeIgniter framework. Can you describe a project where you utilized this framework extensively and explain why it was chosen over other options?
+bot: In your role at A2Z Infotech, you worked with front-end technologies like HTML, CSS, and JavaScript. Can you provide an example of how you ensured cross-browser compatibility in your projects?
+bot: You have experience with MySQL. Can you explain the process of optimizing a MySQL database to improve query performance and overall application responsiveness?
+bot: You've worked with RESTful APIs. Can you explain the concept of HATEOAS (Hypermedia as the Engine of Application State) and its significance in RESTful API design?
+
+End of Report

@@ -70,4 +70,4 @@ generated_reports/
 
 # Frontend builds (if applicable)
 build/
-dist/interview_app.log
+dist/

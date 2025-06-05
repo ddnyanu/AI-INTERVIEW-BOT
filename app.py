@@ -20,7 +20,13 @@ app.secret_key = 'your-secret-key-here'
 from flask_session import Session
 
 app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_COOKIE_NAME'] = 'session'
+# Set safe path for session file storage
+session_dir = os.path.join(os.getcwd(), 'flask_session_data')
+os.makedirs(session_dir, exist_ok=True)
+app.config['SESSION_FILE_DIR'] = session_dir
 Session(app)
+
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -723,7 +729,7 @@ def get_question():
 
     # === Timer Logic (e.g., interview for 15 minutes max) ===
     elapsed_time = datetime.now(timezone.utc) - interview_data.get('start_time', datetime.now(timezone.utc))
-    max_duration = timedelta(minutes=15)  # Change as needed
+    max_duration = timedelta(minutes=20)  # Change as needed
     if elapsed_time > max_duration:
         logger.info("Interview duration exceeded.")
         return jsonify({"status": "time_exceeded", "message": "Interview time has ended."})
