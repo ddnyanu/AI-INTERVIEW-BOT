@@ -1,0 +1,30 @@
+
+Interview Report for Sagar Resume
+Role: Software Engineer
+Experience Level: fresher
+Years of Experience: 0
+
+Interview Duration: 11m 30s
+Average Rating: 3.5/10
+
+Conversation Transcript:
+bot: You mention Python and SQL as your chosen languages. Can you describe a project where you utilized both in conjunction and how you handled the data processing and manipulation?
+user: we use the Python and SQL in our missing medical insurance price prediction project  is used for data preprocessing model building  model training evaluation and visualisation and SQL is used for storing query driving
+bot: Can you explain any challenges you faced when working with SQL and how you overcame them?
+user: for storing  storing the data we have we pay challenge
+bot: Were there any specific libraries or frameworks you utilized in Python to enhance your data processing capabilities?
+user: enhance the processing cabinet capability we use the Mini Python functions like and finders Library
+bot: Your resume showcases a strong foundation in Machine Learning. Can you explain your experience with feature engineering and selection techniques, and provide an example of how you've applied them in your projects?
+user: future engineering techniques be used scaling encoding so enable project  and also feature selection so be used principle component  analysis techniques for the features selection  and we use also L1 regularisation technique to select the features to remove the 11 features  and engineering techniques is a crucial step in building ml model  and it can significantly impact the model performance so some techniques like handling missing data encoding category according  scaling and normalisation feature transformation picture extraction meaning date and time features  and for the features selection we use  filter and embedded methods and then  outlets be handle the outlets
+bot: How do you determine the relevance of features and decide which ones to keep or discard?
+user: relevance of features decide by if we if you know the data and the problem well we can use a domain knowledge to identify which features are likely to have  significant in pact on target variable for example correlation analysis  correlation with the target variable feature importance from the models ml models can provide teacher importance code that indicates how useful each feature is in making predictions that random forest regulation  also we considering the statistical significance than any variable features election
+bot: Have you ever utilized feature engineering techniques to improve the performance of your machine learning models? If so, what was the impact?
+bot: You've mentioned your proficiency in using Flask for web development. Can you describe a project where you utilized Flask to build a web application and the key features you implemented?
+user: handling missing data
+bot: In your resume, you've mentioned your knowledge of statistics and provided a list of relevant techniques and tests. Can you explain the concept of hypothesis testing and provide an example of when it would be applicable?
+user: hypothesis testing is a statistical method used to make inferences or draw conclusions about the population based on a sample of data in that hypothesis testing steps which are  state of hypothesis select the significance level choose the appropriate test in that T test  were test and over test Z test correlation test computer then computer testing and draw conclusion please are the steps for the hypothesis testing
+bot: How do you determine the appropriate significance level (alpha) for a hypothesis test, and what does it represent?
+bot: Can you explain the difference between a one-tailed and a two-tailed hypothesis test and provide an example of when each would be used?
+user: one tell  and in the hypothesis testing then be used the paid paid status
+
+End of Report

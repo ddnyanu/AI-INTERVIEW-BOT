@@ -711,64 +711,69 @@
                 }
             }
             
-            function processAnswer(answer) {
-                if (!interviewInProgress) return;
+         
+
+       function processAnswer(answer) {
+    if (!interviewInProgress) return;
+    
+    // Stop pause detection when processing answer
+    stopPauseDetection();
+    
+    // Capture frame for visual analysis
+    const video = document.getElementById('activeCameraFeed');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const frameData = canvas.toDataURL('image/jpeg');
+    
+    $.ajax({
+        url: '/process_answer',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            answer: answer,
+            frame: frameData
+        }),
+        success: function(response) {
+            if (response.status === 'answer_processed') {
+                // Clear answer preview
+                $('#answerPreview').text('');
                 
-                // Stop pause detection when processing answer
-                stopPauseDetection();
+                // Update progress
+                updateProgress(response.current_question, response.total_questions);
+                $('#currentQuestionNum').text(response.current_question + 1);
                 
-                // Capture frame for visual analysis
-                const video = document.getElementById('activeCameraFeed');
-                const canvas = document.createElement('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const frameData = canvas.toDataURL('image/jpeg');
-                
-                $.ajax({
-                    url: '/process_answer',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({
-                        answer: answer,
-                        frame: frameData
-                    }),
-                    success: function(response) {
-                        if (response.status === 'answer_processed') {
-                            // Clear answer preview
-                            $('#answerPreview').text('');
-                            
-                            // Update progress
-                            updateProgress(response.current_question, response.total_questions);
-                            $('#currentQuestionNum').text(response.current_question + 1);
-                            
-                            if (response.interview_complete) {
-                                interviewComplete();
-                                  // Add this block to trigger PDF download
-            const pdfFilename = response.report_pdf_path ? response.report_pdf_path.split('/').pop() : null;
-           if (pdfFilename) {
-    const downloadUrl = `/download_report/${encodeURIComponent(pdfFilename)}`;
-    const a = document.createElement('a');
-    a.href = downloadUrl;
-    a.download = pdfFilename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+                if (response.interview_complete) {
+                    interviewComplete();
+                    
+                    // Automatically open the report PDF in a new tab
+                    const pdfFilename = response.report_pdf_path ? response.report_pdf_path.split('/').pop() : null;
+                    if (pdfFilename) {
+                        const downloadUrl = `/download_report/${encodeURIComponent(pdfFilename)}`;
+                        
+                        // Open PDF in new tab
+                        window.open(downloadUrl, '_blank');
+                        
+                        // Show download button with updated click handler
+                        $('#downloadReportBtn').show().off('click').on('click', function() {
+                            window.open(downloadUrl, '_blank');
+                        });
+                    }
+                } else {
+                    // Move directly to next question
+                    setTimeout(askQuestion, 1000);
+                }
+            }
+        },
+        error: function(xhr) {
+            alert('Error processing answer: ' + (xhr.responseJSON?.message || 'Unknown error'));
+        }
+    });
 }
 
-                            } else {
-                                // Move directly to next question
-                                setTimeout(askQuestion, 1000);
-                            }
-                        }
-                    },
-                    error: function(xhr) {
-                        alert('Error processing answer: ' + (xhr.responseJSON?.message || 'Unknown error'));
-                    }
-                });
-            }
-            
+
             function interviewComplete() {
                 interviewInProgress = false;
                 if (mediaStream) {

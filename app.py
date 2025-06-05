@@ -652,7 +652,7 @@ def start_interview():
 
     candidate_name = data.get('fileName', 'Candidate')  # match the key sent from JS
     candidate_name = candidate_name.split('.')[0].replace('_', ' ').replace('-', ' ')
-    print("Candidate Name:", candidate_name)
+    print("Candidate Name:----------------------------------------------------------", candidate_name)
     
     # Initialize interview session
     session['interview_data'] = init_interview_data()
@@ -1013,20 +1013,20 @@ def process_answer():
 
     if interview_complete:
         logger.info("Interview complete, generating report")
-        report_data = generate_interview_report(interview_data)
-        plain_report = strip_html(report_data.get('report', ''))
+        user_report = generate_interview_report(interview_data)
+       
 
-        candidate_name = interview_data.get('role', 'candidate').replace(' ', '_')
-
-        pdf_path = save_report_as_pdf(plain_report, candidate_name=candidate_name)
-        logger.info(f"Interview report saved at: {pdf_path}")
+         # Save admin report as plain text
+        admin_filepath, admin_filename = save_admin_report_txt(interview_data)
+        logger.info(f"Admin report saved: {admin_filepath}")
 
         # Optionally, save this path in session or database to serve later in admin dashboard
-        pdf_filename = os.path.basename(pdf_path)
+        
         return jsonify({
             "status": "interview_complete",
             "message": "Interview complete, report generated and saved.",
-            "report_pdf_path": pdf_filename  # send PDF path for frontend/admin use
+             "report_html": user_report.get('reports', ''),  # send HTML for user UI display
+        "admin_report_filename": admin_filename  # send PDF path for frontend/admin use
         })
     
     session['interview_data'] = interview_data
@@ -1041,10 +1041,7 @@ def process_answer():
 
 from flask import send_from_directory
 
-@app.route('/download_report/<filename>')
-def download_report(filename):
-    folder = 'reports'  # Folder where PDFs are saved
-    return send_from_directory(folder, filename, as_attachment=True)
+
 
 
 @app.route('/check_pause', methods=['GET'])
@@ -1076,23 +1073,52 @@ def check_pause():
     
     return jsonify({"status": "active"})
 
+# @app.route('/generate_report', methods=['GET'])
+# def generate_report():
+#     logger.info("Generate report request received")
+#     interview_data = session.get('interview_data', init_interview_data())
+    
+#     if not interview_data['interview_started']:
+#         logger.warning("Attempt to generate report before interview started")
+#         return jsonify({"status": "error", "message": "Interview not started"}), 400
+    
+#     if not interview_data['end_time']:
+#         interview_data['end_time'] = datetime.now(timezone.utc)
+#         session['interview_data'] = interview_data
+#         logger.debug("Set end time for interview")
+    
+#     report = generate_interview_report(interview_data)
+#     logger.info("Interview report generated")
+#     return jsonify(report)
+
+
 @app.route('/generate_report', methods=['GET'])
 def generate_report():
     logger.info("Generate report request received")
     interview_data = session.get('interview_data', init_interview_data())
-    
+
     if not interview_data['interview_started']:
         logger.warning("Attempt to generate report before interview started")
         return jsonify({"status": "error", "message": "Interview not started"}), 400
-    
+
     if not interview_data['end_time']:
         interview_data['end_time'] = datetime.now(timezone.utc)
         session['interview_data'] = interview_data
         logger.debug("Set end time for interview")
-    
+
+    # ✅ Generate admin report text file
+    try:
+        filepath, filename = save_admin_report_txt(interview_data)
+        logger.info(f"Admin report saved at {filepath}")
+    except Exception as e:
+        logger.error(f"Failed to save admin report: {e}")
+
+    # ✅ Generate user report for frontend
     report = generate_interview_report(interview_data)
     logger.info("Interview report generated")
+
     return jsonify(report)
+
 
 @app.route('/reset_interview', methods=['POST'])
 def reset_interview():
@@ -1106,29 +1132,104 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import os
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 def save_report_as_pdf(report_text, candidate_name, folder="reports"):
-    # Create folder if not exists
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+    folder_path = os.path.join(BASE_DIR, folder)
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
     
-    # Create unique filename
     filename = f"{candidate_name}_interview_report.pdf".replace(" ", "_")
-    print(f"Saving report as PDF: {filename}")
-    filepath = os.path.join(folder, filename)
+    filepath = os.path.join(folder_path, filename)
     
-    c = canvas.Canvas(filepath, pagesize=letter)
-    width, height = letter
+    try:
+        c = canvas.Canvas(filepath, pagesize=letter)
+        width, height = letter
 
-    text_object = c.beginText(40, height - 50)
-    for line in report_text.splitlines():
-        text_object.textLine(line)
-    c.drawText(text_object)
-    c.save()
+        text_object = c.beginText(40, height - 50)
+        for line in report_text.splitlines():
+            text_object.textLine(line)
+        c.drawText(text_object)
+        c.save()
+        return filepath
+    except Exception as e:
+        logger.error(f"Failed to save PDF report: {e}")
+        return None
+
+
+
+from flask import send_from_directory
+
+@app.route('/download_report/<filename>')
+def download_report(filename):
+    folder = 'reports'  # Make sure this matches your save folder
+    return send_from_directory(folder, filename, as_attachment=True)
+
+
+
+
+def create_text_report_from_interview_data(interview_data):
+    # Create a simple plain text report from your interview data.
+    # Customize this based on what you want in admin report.
+    candidate = interview_data.get('candidate_name', 'Unknown Candidate')
+    role = interview_data.get('role', 'Unknown Role')
+    exp_level = interview_data.get('experience_level', 'Unknown')
+    years = interview_data.get('years_experience', 0)
     
-    return filepath
+    # Use conversation history text
+    conversation = "\n".join(
+        f"{item.get('speaker', 'unknown')}: {item.get('text', '')}" 
+        for item in interview_data.get('conversation_history', [])
+        if 'speaker' in item
+    )
+    
+    avg_rating = sum(interview_data.get('ratings', [])) / len(interview_data.get('ratings', [])) if interview_data.get('ratings') else 0
+    duration = "N/A"
+    if interview_data.get('start_time') and interview_data.get('end_time'):
+        duration_seconds = (interview_data['end_time'] - interview_data['start_time']).total_seconds()
+        minutes = int(duration_seconds // 60)
+        seconds = int(duration_seconds % 60)
+        duration = f"{minutes}m {seconds}s"
+
+    report_txt = f"""
+Interview Report for {candidate}
+Role: {role}
+Experience Level: {exp_level}
+Years of Experience: {years}
+
+Interview Duration: {duration}
+Average Rating: {avg_rating:.1f}/10
+
+Conversation Transcript:
+{conversation}
+
+End of Report
+"""
+    return report_txt
+
+def save_admin_report_txt(interview_data):
+    report_txt = create_text_report_from_interview_data(interview_data)
+    
+    candidate = interview_data.get("candidate_name", "unknown").replace(" ", "_")
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    filename = f"{candidate}_interview_report_{timestamp}.txt"
+
+    reports_folder = os.path.join(os.getcwd(), "reports")
+    if not os.path.exists(reports_folder):
+        os.makedirs(reports_folder)
+
+    filepath = os.path.join(reports_folder, filename)
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(report_txt)
+
+    return filepath, filename
 
 
-from flask import session
+
+
+
+
+
 
 @app.route('/logout')
 def logout():
