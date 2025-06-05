@@ -13,8 +13,27 @@ import re
 import json
 import logging
 from logging.handlers import RotatingFileHandler
+import requests
 
 app = Flask(__name__)
+DJANGO_API_URL = "https://ibot-backend.onrender.com/jobs/interview/" 
+
+@app.route('/jobs/interview/<token>/')
+def interview(token):
+    try:
+        # Call your Django API to get interview data
+        response = requests.get(f"{DJANGO_API_URL}{token}/")
+        if response.status_code == 200:
+            data = response.json()
+            return render_template("interview.html", data=data)
+        else:
+            return render_template("error.html", message="Invalid or expired interview link."), 404
+    except Exception as e:
+        print("❌ Error while contacting Django:", str(e))
+        return render_template("error.html", message="Server error while retrieving interview data."), 500
+
+
+
 app.secret_key = 'your-secret-key-here'
 # app.config['PERMANENT_SESSION_LIFETIME'] = 10600
 from flask_session import Session
