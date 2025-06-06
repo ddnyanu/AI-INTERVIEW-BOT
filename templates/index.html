@@ -264,15 +264,17 @@
 
 
 <body>
-    <h1>Welcome to the Interview, {{ data.user_name }}</h1>
-    <p><strong>Organization:</strong> {{ data.organization_name }}</p>
-    <p><strong>Job ID:</strong> {{ data.job_id }}</p>
-    <p><strong>Status:</strong> {{ data.status }}</p>
-    <p><strong>Email:</strong> {{ data.email }}</p>
-    <p><strong>Phone:</strong> {{ data.phone_number }}</p>
-    <p><strong>Match Score:</strong> {{ data.match_score }}%</p>
-    <p><strong>resume text:</strong> {{ data.resume_text }}</p>
-    <p><strong>job Description:</strong> {{ data.jd_text }}</p>
+  <h1>Welcome to the Interview, {{ data.get('user_name', 'Guest') }}</h1>
+
+<p><strong>Organization:</strong> {{ data.get('organization_name', 'N/A') }}</p>
+<p><strong>Job ID:</strong> {{ data.get('job_id', 'N/A') }}</p>
+<p><strong>Status:</strong> {{ data.get('status', 'N/A') }}</p>
+<p><strong>Email:</strong> {{ data.get('email', 'N/A') }}</p>
+<p><strong>Phone:</strong> {{ data.get('phone_number', 'N/A') }}</p>
+<p><strong>Match Score:</strong> {{ data.get('match_score', 'N/A') }}%</p>
+<p><strong>Resume Text:</strong> {{ data.get('resume_text', 'Not available') }}</p>
+<p><strong>Job Description:</strong> {{ data.get('jd_text', 'Not available') }}</p>
+
 
 
     <div class="container-fluid">

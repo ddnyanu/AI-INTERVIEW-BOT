@@ -663,7 +663,16 @@ def home():
     logger.info("Home page accessed")
     session.clear()
     session['interview_data'] = init_interview_data()
-    return render_template('index.html')
+        # Provide fallback if data not available
+    data = {
+        "user_name": "Guest",
+        "email": "",
+        "match_score": "",
+        "jd_text": "",
+        "resume_text": ""
+    }
+
+    return render_template('index.html', data=data)
 
 
 from datetime import datetime, timezone
