@@ -49,7 +49,7 @@ def interview(token):
         response = requests.get(f"{DJANGO_API_URL}{token}/")
         print(f"🔍 Requesting interview data from: {DJANGO_API_URL}{token}/")
         print("🌐 Response status:", response.status_code)
-        logging.debug("🎯 Interview Data Received:", data)
+        
 
         if response.status_code == 200:
             data = response.json()
