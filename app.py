@@ -28,6 +28,10 @@ def interview(token):
             jd_text = data.get('jd_text', '')
             resume_text = data.get('resume_text', '')
 
+            session['jd_text'] = jd_text
+            session['resume_text'] = resume_text
+
+
             return render_template("index.html", data=data)
         else:
             return render_template("error.html", message="Invalid or expired interview link."), 404
@@ -151,7 +155,7 @@ def before_request():
 
 
 
-def generate_initial_questions(role, experience_level, years_experience, resume_text="", jd_text=""):
+def generate_initial_questions(role, experience_level, years_experience,jd_text,resume_text):
     
    
     logger.debug("Starting question generation with resume and JD analysis")
@@ -671,6 +675,10 @@ def start_interview():
     data = request.get_json()
     resume_text = data.get('resume_text', '')
     jd_text = data.get('jd_text', '')
+
+    jd_text = session.get("jd_text", "")
+    resume_text = session.get("resume_text", "")
+
 
     print("Extracted Resume Text:", resume_text[:300])
     print("Extracted JD Text:", jd_text[:300])

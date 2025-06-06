@@ -271,8 +271,8 @@
     <p><strong>Email:</strong> {{ data.email }}</p>
     <p><strong>Phone:</strong> {{ data.phone_number }}</p>
     <p><strong>Match Score:</strong> {{ data.match_score }}%</p>
-    <p><strong>resume text:</strong> {{ data.resume_text }}%</p>
-    <p><strong>job Description:</strong> {{ data.jd_text }}%</p>
+    <p><strong>resume text:</strong> {{ data.resume_text }}</p>
+    <p><strong>job Description:</strong> {{ data.jd_text }}</p>
 
 
     <div class="container-fluid">
@@ -462,35 +462,35 @@
                 }
             });
 
-            async function extractPdfText(file) {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = async function () {
-                        const typedArray = new Uint8Array(reader.result);
-                        try {
-                            const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
-                            let text = '';
-                            for (let i = 1; i <= pdf.numPages; i++) {
-                                const page = await pdf.getPage(i);
-                                const content = await page.getTextContent();
-                                text += content.items.map(item => item.str).join(' ') + '\n';
-                            }
-                            resolve(text);
-                        } catch (err) {
-                            reject(err);
-                        }
-                    };
-                    reader.onerror = reject;
-                    reader.readAsArrayBuffer(file);
-                });
-            }
+            // async function extractPdfText(file) {
+            //     return new Promise((resolve, reject) => {
+            //         const reader = new FileReader();
+            //         reader.onload = async function () {
+            //             const typedArray = new Uint8Array(reader.result);
+            //             try {
+            //                 const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
+            //                 let text = '';
+            //                 for (let i = 1; i <= pdf.numPages; i++) {
+            //                     const page = await pdf.getPage(i);
+            //                     const content = await page.getTextContent();
+            //                     text += content.items.map(item => item.str).join(' ') + '\n';
+            //                 }
+            //                 resolve(text);
+            //             } catch (err) {
+            //                 reject(err);
+            //             }
+            //         };
+            //         reader.onerror = reject;
+            //         reader.readAsArrayBuffer(file);
+            //     });
+            // }
 
-            async function getFileTextOrPdf(input) {
-                const file = input.files[0];
-                if (!file) return '';
-                const isPdf = file.name.endsWith('.pdf');
-                return isPdf ? await extractPdfText(file) : await file.text();
-            }
+            // async function getFileTextOrPdf(input) {
+            //     const file = input.files[0];
+            //     if (!file) return '';
+            //     const isPdf = file.name.endsWith('.pdf');
+            //     return isPdf ? await extractPdfText(file) : await file.text();
+            // }
 
             function startTimer() {
                 clearInterval(timerInterval);
@@ -653,14 +653,14 @@
                 const experienceLevel = $('input[name="experienceLevel"]:checked').val();
                 const yearsExperience = experienceLevel === 'experienced' ? $('#yearsExperience').val() : 0;
 
-                const resumeText = `{{ data.resume_text | safe }}`
+                const resumeText = `{{ data.resume_text | safe }}`;
                 const jdText = `{{ data.jd_text | safe }}`;
 
-                const resumeFile = document.getElementById('resume').files[0];
-                const fileName = resumeFile.name; // e.g. "John_Doe_Resume.pdf"
+                // const resumeFile = document.getElementById('resume').files[0];
+                // const fileName = resumeFile.name; // e.g. "John_Doe_Resume.pdf"
 
                 // You can parse name from fileName string (split by underscores, spaces, etc.)
-                const candidateName = fileName.split('.')[0].replace(/[_\-]/g, ' '); // "John Doe Resume"
+                const candidateName =  `{{ data.jd_text | safe }}`;
 
 
                 console.log('Extracted Resume:', resumeText);
@@ -677,8 +677,8 @@
                         experience_level: experienceLevel,
                         years_experience: yearsExperience,
                         resume_text: resumeText,
-                        jd_text: jdText,
-                        fileName:fileName
+                        jd_text: jdText
+                        
                     }),
                     success: function (response) {
                         if (response.status === 'started') {
