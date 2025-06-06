@@ -18,11 +18,14 @@ import requests
 app = Flask(__name__)
 DJANGO_API_URL = "https://ibot-backend.onrender.com/jobs/interview/" 
 
+
 @app.route('/jobs/interview/<token>/')
 def interview(token):
     try:
         # Call your Django API to get interview data
         response = requests.get(f"{DJANGO_API_URL}{token}/")
+        print(f"🔍 Requesting interview data from: {DJANGO_API_URL}{token}/")
+
         if response.status_code == 200:
             data = response.json()
             jd_text = data.get('jd_text', '')
