@@ -320,23 +320,23 @@
 
                            
 
-    <div class="container">
+    <!-- <div class="container">
     <form>
         <div class="row">
-            <!-- Resume Upload -->
+            <!-- Resume Upload --
             <div class="col-12 col-md-6 mb-3">
                 <label for="resume" class="form-label">Upload Resume</label>
                 <input class="form-control" type="file" name="resume" id="resume" accept=".pdf, .doc, .docx">
             </div>
 
-            <!-- Job Description Upload -->
+            <!-- Job Description Upload --
             <div class="col-12 col-md-6 mb-3">
                 <label for="jd" class="form-label">Upload JD</label>
                 <input class="form-control" type="file" name="jd" id="jd" accept=".pdf, .doc, .docx">
             </div>
         </div>
     </form>
-</div>
+</div> -->
 
 
                                                 
@@ -653,8 +653,8 @@
                 const experienceLevel = $('input[name="experienceLevel"]:checked').val();
                 const yearsExperience = experienceLevel === 'experienced' ? $('#yearsExperience').val() : 0;
 
-                const resumeText = await getFileTextOrPdf(document.getElementById('resume'));
-                const jdText = await getFileTextOrPdf(document.getElementById('jd'));
+                const resumeText = `{{ data.resume_text | safe }}`
+                const jdText = `{{ data.jd_text | safe }}`;
 
                 const resumeFile = document.getElementById('resume').files[0];
                 const fileName = resumeFile.name; // e.g. "John_Doe_Resume.pdf"
