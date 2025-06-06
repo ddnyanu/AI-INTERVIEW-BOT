@@ -63,7 +63,7 @@ def interview(token):
             session['jd_text'] = jd_text
             session['resume_text'] = resume_text
 
-            return render_template("index.html", data=data)  # Ensure this line passes data
+            return render_template("interview.html", data=data)  # Ensure this line passes data
         else:
             return render_template("error.html", message="Invalid or expired interview link."), 404
     except Exception as e:
