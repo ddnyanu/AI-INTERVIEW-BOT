@@ -257,7 +257,24 @@
         
     </style>
 </head>
+
+
+
+
+
+
 <body>
+    <h1>Welcome to the Interview, {{ data.user_name }}</h1>
+    <p><strong>Organization:</strong> {{ data.organization_name }}</p>
+    <p><strong>Job ID:</strong> {{ data.job_id }}</p>
+    <p><strong>Status:</strong> {{ data.status }}</p>
+    <p><strong>Email:</strong> {{ data.email }}</p>
+    <p><strong>Phone:</strong> {{ data.phone_number }}</p>
+    <p><strong>Match Score:</strong> {{ data.match_score }}%</p>
+    <p><strong>resume text:</strong> {{ data.resume_text }}%</p>
+    <p><strong>job Description:</strong> {{ data.jd_text }}%</p>
+
+
     <div class="container-fluid">
         <div class="row header">
             <div class="col-12 text-center">
