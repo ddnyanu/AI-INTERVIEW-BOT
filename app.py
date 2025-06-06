@@ -19,23 +19,51 @@ app = Flask(__name__)
 DJANGO_API_URL = "https://ibot-backend.onrender.com/jobs/interview/" 
 
 
+# @app.route('/jobs/interview/<token>/')
+# def interview(token):
+#     try:
+#         # Call your Django API to get interview data
+#         response = requests.get(f"{DJANGO_API_URL}{token}/")
+#         print(f"🔍 Requesting interview data from: {DJANGO_API_URL}{token}/")
+
+#         if response.status_code == 200:
+#             data = response.json()
+#             jd_text = data.get('jd_text', '')
+#             resume_text = data.get('resume_text', '')
+
+#             session['jd_text'] = jd_text
+#             session['resume_text'] = resume_text
+
+
+#             return render_template("index.html", data=data)
+#         else:
+#             return render_template("error.html", message="Invalid or expired interview link."), 404
+#     except Exception as e:
+#         print("❌ Error while contacting Django:", str(e))
+#         return render_template("error.html", message="Server error while retrieving interview data."), 500
+
+
 @app.route('/jobs/interview/<token>/')
 def interview(token):
     try:
-        # Call your Django API to get interview data
         response = requests.get(f"{DJANGO_API_URL}{token}/")
         print(f"🔍 Requesting interview data from: {DJANGO_API_URL}{token}/")
+        print("🌐 Response status:", response.status_code)
 
         if response.status_code == 200:
             data = response.json()
-            jd_text = data.get('jd_text', '')
-            resume_text = data.get('resume_text', '')
+            print("✅ Data received from Django:", data)  # Debug print
+
+            jd_text = data.get('jd_text')
+            resume_text = data.get('resume_text')
+
+            print("🧾 JD Text:", jd_text)
+            print("📄 Resume Text:", resume_text)
 
             session['jd_text'] = jd_text
             session['resume_text'] = resume_text
 
-
-            return render_template("index.html", data=data)
+            return render_template("index.html", data=data)  # Ensure this line passes data
         else:
             return render_template("error.html", message="Invalid or expired interview link."), 404
     except Exception as e:
