@@ -47,22 +47,19 @@ DJANGO_API_URL = "https://ibot-backend.onrender.com/jobs/interview/"
 def interview(token):
     try:
         response = requests.get(f"{DJANGO_API_URL}{token}/")
-        print(f"🔍 Requesting interview data from: {DJANGO_API_URL}{token}/")
-        print("🌐 Response status:", response.status_code)
         
-
         if response.status_code == 200:
             data = response.json()
             print("✅ Data received from Django:", data)  # Debug print
 
-            jd_text = data.get('jd_text')
-            resume_text = data.get('resume_text')
+            session['jd_text'] = data.get('jd_text')
+            session['resume_text'] = data.get('resume_text')
+            session['phone_number'] = data.get('phone_number')
 
-            print("🧾 JD Text:", jd_text)
-            print("📄 Resume Text:", resume_text)
+            print("🔍 JD Text:", session['jd_text'][:300])  # Print first 300 chars for debugging
+            print("🔍 Resume Text:", session['resume_text'][:300])  # Print first 300 chars for debugging
+            
 
-            session['jd_text'] = jd_text
-            session['resume_text'] = resume_text
 
             return render_template("index.html", data=data)  # Ensure this line passes data
         else:
