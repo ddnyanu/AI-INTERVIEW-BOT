@@ -16,7 +16,7 @@ from logging.handlers import RotatingFileHandler
 import requests
 
 app = Flask(__name__)
-DJANGO_API_URL = "https://ibot-backend.onrender.com/jobs/interview/" 
+DJANGO_API_URL = "https://ai-interview-bot-80aw.onrender.com/jobs/interview/" 
 
 
 # @app.route('/jobs/interview/<token>/')
@@ -1299,24 +1299,17 @@ def download_report(filename):
     return send_from_directory(folder, filename, as_attachment=True)
 
 
-
-
 def create_text_report_from_interview_data(interview_data):
-    # Create a simple plain text report from your interview data.
-    # Customize this based on what you want in admin report.
     candidate = interview_data.get('candidate_name', 'Unknown Candidate')
     role = interview_data.get('role', 'Unknown Role')
     exp_level = interview_data.get('experience_level', 'Unknown')
     years = interview_data.get('years_experience', 0)
-    
-    # Use conversation history text
-    conversation = "\n".join(
-        f"{item.get('speaker', 'unknown')}: {item.get('text', '')}" 
-        for item in interview_data.get('conversation_history', [])
-        if 'speaker' in item
-    )
-    
-    avg_rating = sum(interview_data.get('ratings', [])) / len(interview_data.get('ratings', [])) if interview_data.get('ratings') else 0
+
+    # Calculate average rating
+    ratings = interview_data.get('ratings', [])
+    avg_rating = sum(ratings) / len(ratings) if ratings else 0
+
+    # Calculate interview duration
     duration = "N/A"
     if interview_data.get('start_time') and interview_data.get('end_time'):
         duration_seconds = (interview_data['end_time'] - interview_data['start_time']).total_seconds()
@@ -1324,6 +1317,20 @@ def create_text_report_from_interview_data(interview_data):
         seconds = int(duration_seconds % 60)
         duration = f"{minutes}m {seconds}s"
 
+    # Build conversation with evaluation
+    conversation_history = interview_data.get('conversation_history', [])
+    transcript = ""
+    for idx, item in enumerate(conversation_history, 1):
+        question = item.get('question', 'N/A')
+        answer = item.get('answer', 'N/A')
+        evaluation = item.get('evaluation', 'Not Evaluated')
+        transcript += f"""
+Q{idx}: {question}
+A{idx}: {answer}
+✅ Evaluation: {evaluation}
+"""
+
+    # Final report
     report_txt = f"""
 Interview Report for {candidate}
 Role: {role}
@@ -1334,11 +1341,13 @@ Interview Duration: {duration}
 Average Rating: {avg_rating:.1f}/10
 
 Conversation Transcript:
-{conversation}
+{transcript.strip()}
 
 End of Report
 """
     return report_txt
+
+
 
 def save_admin_report_txt(interview_data):
     report_txt = create_text_report_from_interview_data(interview_data)
