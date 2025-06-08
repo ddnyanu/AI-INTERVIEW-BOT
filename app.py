@@ -203,7 +203,7 @@ def before_request():
 @app.route('/jobs/interview/<token>/')
 def interview(token):
     try:
-        response = requests.get(f"{DJANGO_API_URL}{token}/", timeout=10)
+        response = requests.get(f"{DJANGO_API_URL}{token}/", timeout=30)
         logging.debug(f"🔍 Requesting interview data from: {DJANGO_API_URL}{token}/")
         logging.debug("🌐 Response status: %s", response.status_code)
 
@@ -211,18 +211,12 @@ def interview(token):
             data = response.json()
             logging.debug("✅ Data received from Django: %s", data)
 
-            # Store large data in session (not passed to HTML directly)
-            session['jd_text'] = data.get('jd_text')
-            session['resume_text'] = data.get('resume_text')
             session['id'] = data.get('id')
 
             # Only send safe, small data to HTML
-            safe_data = {
-                "user_name": data.get("user_name"),
-                "id": data.get("id"),
-            }
+          
 
-            return render_template("index.html", data=safe_data)
+            return render_template("index.html", data=data)
 
         elif response.status_code == 403:
             return render_template("error.html", message="✅ Interview already completed."), 403
