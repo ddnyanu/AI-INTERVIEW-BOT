@@ -266,8 +266,9 @@
 <body>
   <h1>Welcome to the Interview, {{ data.get('user_name', 'Guest') }}</h1>
 
-<h1>User ID: {{ data.get('id', 'Not Found') }}</h1>
-<h1>User ID: {{ data.get('phone_number', 'Not Found') }}</h1>
+
+  <h1>Welcome, {{ data.user_name }}!</h1>
+  <p>Your Interview ID is: {{ data.id }}</p>
 
 <p><strong>Organization:</strong> {{ data.get('organization_name', 'N/A') }}</p>
 <p><strong>Job ID:</strong> {{ data.get('job_id', 'N/A') }}</p>
