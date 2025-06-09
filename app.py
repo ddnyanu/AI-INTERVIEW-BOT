@@ -16,7 +16,7 @@ from logging.handlers import RotatingFileHandler
 import requests
 
 app = Flask(__name__)
-DJANGO_API_URL = "https://ai-interview-bot-80aw.onrender.com/jobs/interview/" 
+DJANGO_API_URL = "https://ibot-backend.onrender.com/jobs/interview/" 
 
 
 # @app.route('/jobs/interview/<token>/')
