@@ -264,40 +264,10 @@
 
 
 <body>
-  <h1>Welcome to the Interview, {{ data.get('user_name', 'Guest') }}</h1>
 
 
-  <h1>Welcome, {{ data.user_name }}!</h1>
-  <p>Your Interview ID is: {{ data.id }}</p>
 
-<p><strong>Organization:</strong> {{ data.get('organization_name', 'N/A') }}</p>
-<p><strong>Job ID:</strong> {{ data.get('job_id', 'N/A') }}</p>
-<p><strong>Status:</strong> {{ data.get('status', 'N/A') }}</p>
-<p><strong>Email:</strong> {{ data.get('email', 'N/A') }}</p>
-<!-- <p><strong>Phone:</strong> {{ data.get('phone_number', 'N/A') }}</p> -->
-<p><strong>Match Score:</strong> {{ data.get('match_score', 'N/A') }}%</p>
-<p><strong>Resume Text:</strong> {{ data["resume_text"] or "Not available" }}</p>
-<p><strong>Job Description:</strong> {{ data["jd_text"] or "Not available" }}</p>
 
- <div class="section">
-        <h2>📄 Job Description</h2>
-        <pre>{{ data.jd_text }}</pre>
-    </div>
-
-    <div class="section">
-        <h2>🏢 Organization</h2>
-        <p>{{ data.organization_name }}</p>
-    </div>
-
-    <div class="section">
-        <h2>💼 Job Title</h2>
-        <p>{{ data.job_title }}</p>
-    </div>
-
-    <div class="section">
-        <h2>📧 Candidate Email</h2>
-        <p>{{ data.email }}</p>
-    </div>
 
 
 
@@ -310,6 +280,38 @@
                 <p class="tagline">Practice your interview skills with our AI interviewer</p>
             </div>
         </div>
+    <div>
+
+
+  <div class="container mt-4">
+  <div class="card shadow rounded">
+    <div class="card-body">
+      <h2 class="card-title text-center text-primary mb-3">
+        Welcome, {{ data.user_name }}!
+      </h2>
+      <hr>
+      <div class="row">
+        <div class="col-md-6 mb-2">
+          <strong>Interview ID:</strong> {{ data.id }}
+        </div>
+        <div class="col-md-6 mb-2">
+          <strong>Organization:</strong> {{ data.organization_name or 'N/A' }}
+        </div>
+        <div class="col-md-6 mb-2">
+          <strong>Job Title:</strong> {{ data.job_title or 'N/A' }}
+        </div>
+        <div class="col-md-6 mb-2">
+          <strong>Email:</strong> {{ data.email or 'N/A' }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+    </div>
 
         <div class="row setup-section">
             <div class="col-md-6 offset-md-3">
