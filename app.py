@@ -15,6 +15,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import requests
 
+
 app = Flask(__name__)
 DJANGO_API_URL = "https://ibot-backend.onrender.com/jobs/interview/" 
 
@@ -1232,22 +1233,33 @@ def check_pause():
     
     return jsonify({"status": "active"})
 
+
+
 # @app.route('/generate_report', methods=['GET'])
 # def generate_report():
 #     logger.info("Generate report request received")
 #     interview_data = session.get('interview_data', init_interview_data())
-    
+
 #     if not interview_data['interview_started']:
 #         logger.warning("Attempt to generate report before interview started")
 #         return jsonify({"status": "error", "message": "Interview not started"}), 400
-    
+
 #     if not interview_data['end_time']:
 #         interview_data['end_time'] = datetime.now(timezone.utc)
 #         session['interview_data'] = interview_data
 #         logger.debug("Set end time for interview")
-    
+
+#     # ✅ Generate admin report text file
+#     try:
+#         filepath, filename = save_admin_report_txt(interview_data)
+#         logger.info(f"Admin report saved at {filepath}")
+#     except Exception as e:
+#         logger.error(f"Failed to save admin report: {e}")
+
+#     # ✅ Generate user report for frontend
 #     report = generate_interview_report(interview_data)
 #     logger.info("Interview report generated")
+
 #     return jsonify(report)
 
 
@@ -1267,16 +1279,27 @@ def generate_report():
 
     # ✅ Generate admin report text file
     try:
-        filepath, filename = save_admin_report_txt(interview_data)
+        filepath, filename = save_report_to_django(interview_data)
         logger.info(f"Admin report saved at {filepath}")
     except Exception as e:
         logger.error(f"Failed to save admin report: {e}")
+
+    # ✅ Save report to Django DB
+    try:
+        status_code, response = save_report_to_django(interview_data)
+        if status_code == 201:
+            logger.info("✅ Report successfully saved to Django DB.")
+        else:
+            logger.warning(f"⚠ Failed to save report to Django: {response}")
+    except Exception as e:
+        logger.error(f"❌ Exception while sending report to Django: {e}")
 
     # ✅ Generate user report for frontend
     report = generate_interview_report(interview_data)
     logger.info("Interview report generated")
 
     return jsonify(report)
+
 
 
 @app.route('/reset_interview', methods=['POST'])
@@ -1286,18 +1309,7 @@ def reset_interview():
     session['interview_data'] = init_interview_data()
     return jsonify({"status": "success", "message": "Interview reset successfully"})
 
-
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-
-from flask import send_from_directory
-
-@app.route('/download_report/<filename>')
-def download_report(filename):
-    folder = 'reports'  # Make sure this matches your save folder
-    return send_from_directory(folder, filename, as_attachment=True)
-
+from datetime import datetime, timezone
 
 def create_text_report_from_interview_data(interview_data):
     candidate = interview_data.get('candidate_name', 'Unknown Candidate')
@@ -1349,27 +1361,84 @@ End of Report
 
 
 
-def save_admin_report_txt(interview_data):
+import requests
+
+def save_report_to_django(interview_data):
     report_txt = create_text_report_from_interview_data(interview_data)
-    
-    candidate = interview_data.get("candidate_name", "unknown").replace(" ", "_")
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    filename = f"{candidate}_interview_report_{timestamp}.txt"
 
-    reports_folder = os.path.join(os.getcwd(), "reports")
-    if not os.path.exists(reports_folder):
-        os.makedirs(reports_folder)
+    payload = {
+        "candidate_name": interview_data.get("candidate_name"),
+        "role": interview_data.get("role"),
+        "organization_name": interview_data.get("organization_name", "N/A"),
+        "experience_level": interview_data.get("experience_level"),
+        "years_experience": interview_data.get("years_experience", 0),
+        "start_time": interview_data['start_time'].isoformat(),
+        "end_time": interview_data['end_time'].isoformat(),
+        "average_rating": sum(interview_data.get("ratings", [])) / len(interview_data.get("ratings", [])) if interview_data.get("ratings") else 0,
+        "status": "Completed",
+        "report_text": report_txt
+    }
 
-    filepath = os.path.join(reports_folder, filename)
-    with open(filepath, "w", encoding="utf-8") as f:
-        f.write(report_txt)
+    try:
+        response = requests.post("https://ibot-backend.onrender.com/jobs/save-report/", json=payload)
+        print("✅ Django API response:", response.status_code, response.text)
+        return response.status_code, response.json()
+    except Exception as e:
+        print("❌ Error sending report to Django:", str(e))
+        return 500, {"error": str(e)}
 
-    return filepath, filename
 
 
 
 
 
+# def create_text_report_from_interview_data(interview_data):
+#     candidate = interview_data.get('candidate_name', 'Unknown Candidate')
+#     role = interview_data.get('role', 'Unknown Role')
+#     exp_level = interview_data.get('experience_level', 'Unknown')
+#     years = interview_data.get('years_experience', 0)
+
+#     # Calculate average rating
+#     ratings = interview_data.get('ratings', [])
+#     avg_rating = sum(ratings) / len(ratings) if ratings else 0
+
+#     # Calculate interview duration
+#     duration = "N/A"
+#     if interview_data.get('start_time') and interview_data.get('end_time'):
+#         duration_seconds = (interview_data['end_time'] - interview_data['start_time']).total_seconds()
+#         minutes = int(duration_seconds // 60)
+#         seconds = int(duration_seconds % 60)
+#         duration = f"{minutes}m {seconds}s"
+
+#     # Build conversation with evaluation
+#     conversation_history = interview_data.get('conversation_history', [])
+#     transcript = ""
+#     for idx, item in enumerate(conversation_history, 1):
+#         question = item.get('question', 'N/A')
+#         answer = item.get('answer', 'N/A')
+#         evaluation = item.get('evaluation', 'Not Evaluated')
+#         transcript += f"""
+# Q{idx}: {question}
+# A{idx}: {answer}
+# ✅ Evaluation: {evaluation}
+# """
+
+#     # Final report
+#     report_txt = f"""
+# Interview Report for {candidate}
+# Role: {role}
+# Experience Level: {exp_level}
+# Years of Experience: {years}
+
+# Interview Duration: {duration}
+# Average Rating: {avg_rating:.1f}/10
+
+# Conversation Transcript:
+# {transcript.strip()}
+
+# End of Report
+# """
+#     return report_txt
 
 
 
