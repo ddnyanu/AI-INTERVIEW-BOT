@@ -758,8 +758,8 @@ def start_interview():
     logger.debug(f"Received resume text (first 300 chars): {resume_text[:300]}")
     logger.debug(f"Received JD text (first 300 chars): {jd_text[:300]}")
 
-    candidate_name = data.get('fileName', 'Candidate')  # match the key sent from JS
-    candidate_name = candidate_name.split('.')[0].replace('_', ' ').replace('-', ' ')
+    user_name = data.get('fileName', 'Candidate')  # match the key sent from JS
+    candidate_name = user_name.split('.')[0].replace('_', ' ').replace('-', ' ')
     print("Candidate Name:----------------------------------------------------------", candidate_name)
     
     # Initialize interview session
@@ -782,7 +782,7 @@ def start_interview():
     interview_data['years_experience'] = int(session.get('years_experience', 0))
     interview_data['resume'] = session.get('resume_text')
     interview_data['jd'] = session.get('jd_text')
-    interview_data['candidate_name'] = session.get('user_name', 'Anonymous')
+    interview_data['user_name'] = session.get('user_name', 'Anonymous')
     interview_data['email'] = session.get('email')
 
     # Timestamps
@@ -1240,6 +1240,7 @@ def generate_report():
         interview_data['end_time'] = datetime.now(timezone.utc)
         session['interview_data'] = interview_data
         logger.debug("Set end time for interview")
+    
 
     # ✅ Generate admin report text file
     try:
@@ -1331,7 +1332,7 @@ def save_report_to_django(interview_data):
     report_txt = create_text_report_from_interview_data(interview_data)
 
     payload = {
-        "candidate_name": interview_data.get("user_name"),
+        "user_name": interview_data.get("user_name"),
         "role": interview_data.get("role"),
         "organization_name": interview_data.get("organization_name", "N/A"),
         "experience_level": interview_data.get("experience_level"),
