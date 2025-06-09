@@ -74,7 +74,7 @@ logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
 # Cohere API Configuration
-cohere_api_key = "s2ItqFSWNZFJYcCfQS8d70tS4Mfjv0bJdGdutym4"
+cohere_api_key = "FQP7SbVZ7Z6G4LwmmO62HfHdpCpHzkmFbHF5PtHW"
 co = cohere.Client(cohere_api_key)
 
 
@@ -162,42 +162,6 @@ def before_request():
         session['interview_data'] = init_interview_data()
     session.permanent = True
 
-
-
-
-
-
-# @app.route('/jobs/interview/<token>/')
-# def interview(token):
-#     try:
-#         response = requests.get(f"{DJANGO_API_URL}{token}/", timeout=30)
-#         logging.debug(f"🔍 Requesting interview data from: {DJANGO_API_URL}{token}/")
-#         logging.debug("🌐 Response status: %s", response.status_code)
-
-#         if response.status_code == 200:
-#             data = response.json()
-#             logging.debug("✅ Data received from Django: %s", data)
-
-#             session['id'] = data.get('id')
-
-#             # Only send safe, small data to HTML
-          
-
-#             return render_template("index.html", data=data)
-
-#         elif response.status_code == 403:
-#             return render_template("error.html", message="✅ Interview already completed."), 403
-#         elif response.status_code == 404:
-#             return render_template("error.html", message="❌ Invalid or expired interview link."), 404
-#         elif response.status_code == 410:
-#             return render_template("error.html", message="❌ Interview link has expired."), 410
-#         else:
-#             logging.error("❌ Unexpected status code: %s", response.status_code)
-#             return render_template("error.html", message="Something went wrong. Please try again later."), 500
-
-#     except Exception as e:
-#         logging.error("❌ Exception while contacting Django: %s", str(e))
-#         return render_template("error.html", message="⚠ Server error while retrieving interview data."), 500
 
 
 
