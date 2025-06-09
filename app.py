@@ -198,8 +198,7 @@ def before_request():
 #         logging.error("❌ Exception while contacting Django: %s", str(e))
 #         return render_template("error.html", message="⚠ Server error while retrieving interview data."), 500
 
-from flask import session, render_template
-import requests, logging
+
 
 @app.route('/jobs/interview/<token>/')
 def interview(token):
@@ -233,6 +232,7 @@ def interview(token):
                 # Optionally combine all data for template
                 full_data = {**interview_data, **resume_jd_data}
 
+
                 return render_template("index.html", data=full_data)
             else:
                 logging.warning("Resume+JD not found or error.")
@@ -253,8 +253,7 @@ def interview(token):
 
 
 
-
-def generate_initial_questions(role, experience_level, years_experience,jd_text,resume_text):
+def generate_initial_questions(role, experience_level, years_experience,jd_text="",resume_text=""):
     
    
     logger.debug("Starting question generation with resume and JD analysis")
@@ -803,14 +802,30 @@ def start_interview():
     interview_data = session['interview_data']
     
     # Assign interview parameters
-    interview_data['role'] = data.get('role', 'Software Engineer')
-    interview_data['experience_level'] = data.get('experience_level', 'fresher')
-    interview_data['years_experience'] = int(data.get('years_experience', 0))
-    interview_data['resume'] = resume_text
-    interview_data['jd'] = jd_text,
-    interview_data['candidate_name'] = candidate_name  
+    # interview_data['role'] = data.get('role', 'Software Engineer')
+    # interview_data['experience_level'] = data.get('experience_level', 'fresher')
+    # interview_data['years_experience'] = int(data.get('years_experience', 0))
+    # interview_data['resume'] = resume_text
+    # interview_data['jd'] = jd_text,
+    # interview_data['candidate_name'] = candidate_name  
+    # interview_data['start_time'] = datetime.now(timezone.utc)
+    # interview_data['last_activity_time'] = datetime.now(timezone.utc)
+
+
+    interview_data['role'] = session.get('job_title', 'Software Engineer')
+    interview_data['experience_level'] = session.get('experience_level', 'fresher')
+    interview_data['years_experience'] = int(session.get('years_experience', 0))
+    interview_data['resume'] = session.get('resume_text')
+    interview_data['jd'] = session.get('jd_text')
+    interview_data['candidate_name'] = session.get('candidate_name', 'Anonymous')
+    interview_data['email'] = session.get('email')
+
+    # Timestamps
     interview_data['start_time'] = datetime.now(timezone.utc)
     interview_data['last_activity_time'] = datetime.now(timezone.utc)
+
+
+
 
     logger.debug(f"Interview parameters set - Role: {interview_data['role']}, "
                  f"Experience: {interview_data['experience_level']}, "
