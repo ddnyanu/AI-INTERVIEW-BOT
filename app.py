@@ -191,6 +191,7 @@ def interview(token):
                 session['organization_name'] = resume_jd_data.get('organization_name')
                 session['job_title'] = resume_jd_data.get('job_title')
                 session['email'] = resume_jd_data.get('email')
+                session['candidate_name'] = resume_jd_data.get('candidate_name')
 
                 logging.debug("Stored Resume & JD in session: %s", session)
 
@@ -784,6 +785,8 @@ def start_interview():
     interview_data['jd'] = session.get('jd_text')
     interview_data['candidate_name'] = session.get('candidate_name', 'Anonymous')
     interview_data['email'] = session.get('email')
+    interview_data['organization_name'] = session.get('organization_name')
+
 
     # Timestamps
     interview_data['start_time'] = datetime.now(timezone.utc)
