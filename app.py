@@ -163,7 +163,8 @@ def before_request():
     session.permanent = True
 
 
-
+username_extrnal="dnyaneshwar dhotre"
+organization_name_extrnal="a2z"
 
 @app.route('/jobs/interview/<token>/')
 def interview(token):
@@ -192,6 +193,8 @@ def interview(token):
                 session['job_title'] = resume_jd_data.get('job_title')
                 session['email'] = resume_jd_data.get('email')
                 session['candidate_name'] = resume_jd_data.get('candidate_name')
+                username_extrnal = resume_jd_data.get('candidate_name', 'Anonymous')
+                organization_name_extrnal = resume_jd_data.get('organization_name', 'Unknown')
 
                 logging.debug("Stored Resume & JD in session: %s", session)
 
@@ -255,7 +258,7 @@ Years: {years_experience}
 {role}
 ---
 
- Your task is to generate **20 smart, unique, and personalized questions** broken down as follows:
+ Your task is to generate **15 smart, unique, and personalized questions** broken down as follows:
 
 1. **5 technical questions from Resume**
 2. **5 technical questions from Job Description**
@@ -457,6 +460,7 @@ def generate_dynamic_follow_up(conversation_history, current_topic):
     except Exception as e:
         logger.error(f"Error generating dynamic follow-up: {str(e)}", exc_info=True)
         return None
+
 
 def generate_encouragement_prompt(conversation_history):
     logger.debug("Generating encouragement prompt for paused candidate")
@@ -1043,7 +1047,7 @@ def process_answer():
             "status": "interview_complete",
             "message": "Interview complete, report generated and saved.",
              "report_html": user_report.get('reports', ''),  # send HTML for user UI display
-        "admin_report_filename": admin_filename  # send PDF path for frontend/admin use
+       
         })
     
     session['interview_data'] = interview_data
@@ -1158,7 +1162,7 @@ def reset_interview():
 from datetime import datetime, timezone
 
 def create_text_report_from_interview_data(interview_data):
-    candidate = interview_data.get('candidate_name', 'Unknown Candidate')
+
     role = interview_data.get('role', 'Unknown Role')
     exp_level = interview_data.get('experience_level', 'Unknown')
     years = interview_data.get('years_experience', 0)
@@ -1190,7 +1194,7 @@ A{idx}: {answer}
 
     # Final report
     report_txt = f"""
-Interview Report for {candidate}
+Interview Report for {username_extrnal}
 Role: {role}
 Experience Level: {exp_level}
 Years of Experience: {years}
@@ -1213,9 +1217,9 @@ def save_report_to_django(interview_data):
     report_txt = create_text_report_from_interview_data(interview_data)
 
     payload = {
-        "candidate_name": interview_data.get("candidate_name", session.get("candidate_name", "Anonymous")),
+        "candidate_name": username_extrnal,
         "role": interview_data.get("role"),
-        "organization_name": interview_data.get("organization_name", session.get("organization_name", "N/A")),
+        "organization_name": organization_name_extrnal,
         "experience_level": interview_data.get("experience_level"),
         "years_experience": interview_data.get("years_experience", 0),
         "start_time": interview_data['start_time'].isoformat(),
