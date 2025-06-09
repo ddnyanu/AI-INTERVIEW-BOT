@@ -767,15 +767,7 @@ def start_interview():
     session['interview_data'] = init_interview_data()
     interview_data = session['interview_data']
     
-    # Assign interview parameters
-    # interview_data['role'] = data.get('role', 'Software Engineer')
-    # interview_data['experience_level'] = data.get('experience_level', 'fresher')
-    # interview_data['years_experience'] = int(data.get('years_experience', 0))
-    # interview_data['resume'] = resume_text
-    # interview_data['jd'] = jd_text,
-    # interview_data['candidate_name'] = candidate_name  
-    # interview_data['start_time'] = datetime.now(timezone.utc)
-    # interview_data['last_activity_time'] = datetime.now(timezone.utc)
+    
 
 
     interview_data['role'] = session.get('job_title', 'Software Engineer')
@@ -953,104 +945,7 @@ def parse_questions(raw):
 
     return questions, topics
 
-
-
-# @app.route('/process_answer', methods=['POST'])
-# def process_answer():
-#     logger.info("Process answer request received")
-#     interview_data = session.get('interview_data', init_interview_data())
-    
-#     if not interview_data['interview_started']:
-#         logger.warning("Attempt to process answer before interview started")
-#         return jsonify({"status": "error", "message": "Interview not started"}), 400
-    
-#     data = request.get_json()
-#     answer = data.get('answer', '').strip()
-#     frame_data = data.get('frame', None)
-#     logger.debug(f"Received answer length: {len(answer)} characters")
-    
-#     if not answer:
-#         logger.warning("Empty answer received")
-#         return jsonify({"status": "error", "message": "Empty answer"}), 400
-
-#     # ✅ Safely get the last question asked
-#     last_entry = interview_data['conversation_history'][-1] if interview_data['conversation_history'] else {}
-#     current_question = last_entry.get('text') or last_entry.get('question') or ''
-    
-#     interview_data['answers'].append(answer)
-#     interview_data['conversation_history'].append({"speaker": "user", "text": answer})
-#     save_conversation_to_file([{"speaker": "user", "text": answer}])
-#     interview_data['last_activity_time'] = datetime.now(timezone.utc)
-    
-#     visual_feedback = None
-#     current_time = datetime.now().timestamp()
-#     if frame_data and (current_time - interview_data['last_frame_time']) > FRAME_CAPTURE_INTERVAL:
-#         try:
-#             logger.debug("Processing frame data")
-#             frame_bytes = base64.b64decode(frame_data.split(',')[1])
-#             frame_array = np.frombuffer(frame_bytes, dtype=np.uint8)
-#             frame = cv2.imdecode(frame_array, cv2.IMREAD_COLOR)
-            
-#             if frame is not None:
-#                 frame_base64 = process_frame_for_gpt4v(frame)
-#                 visual_feedback = analyze_visual_response(
-#                     frame_base64,
-#                     interview_data['conversation_history'][-3:]
-#                 )
-#                 if visual_feedback:
-#                     interview_data['visual_feedback'].append(visual_feedback)
-#                     interview_data['last_frame_time'] = current_time
-#                     logger.debug("Visual feedback processed and stored")
-#         except Exception as e:
-#             logger.error(f"Error processing frame: {str(e)}", exc_info=True)
-    
-#     logger.debug("Evaluating response quality")
-#     rating = evaluate_response(
-#         answer, 
-#         current_question, 
-#         interview_data['role'],
-#         interview_data['experience_level'],
-#         visual_feedback
-#     )
-#     interview_data['ratings'].append(rating)
-#     logger.debug(f"Response rated: {rating}/10")
-    
-#     if (interview_data['current_topic'] and len(answer.split()) > 15 and 
-#         interview_data['follow_up_count'] < MAX_FOLLOW_UPS):
-        
-#         current_main_question_index = interview_data['current_question'] - 1
-#         if (current_main_question_index < len(interview_data['conversation_history']) and 
-#             'prepared_follow_ups' in interview_data['conversation_history'][current_main_question_index]):
-            
-#             prepared_follow_ups = interview_data['conversation_history'][current_main_question_index]['prepared_follow_ups']
-#             for follow_up in prepared_follow_ups:
-#                 if follow_up not in interview_data['used_follow_ups'] and follow_up not in interview_data['follow_up_questions']:
-#                     interview_data['follow_up_questions'].append(follow_up)
-#                     logger.debug(f"Added prepared follow-up: {follow_up}")
-        
-#         if len(interview_data['follow_up_questions']) < MAX_FOLLOW_UPS:
-#             logger.debug("Generating dynamic follow-up question")
-#             dynamic_follow_up = generate_dynamic_follow_up(
-#                 interview_data['conversation_history'],
-#                 interview_data['current_topic']
-#             )
-#             if dynamic_follow_up and dynamic_follow_up not in interview_data['used_follow_ups'] and dynamic_follow_up not in interview_data['follow_up_questions']:
-#                 interview_data['follow_up_questions'].append(dynamic_follow_up)
-#                 logger.debug(f"Added dynamic follow-up: {dynamic_follow_up}")
-    
-
-   
-
-#     session['interview_data'] = interview_data
-    
-#     return jsonify({
-#         "status": "answer_processed",
-#         "current_question": interview_data['current_question'],
-#         "total_questions": len(interview_data['questions']),
-#         "interview_complete": interview_data['current_question'] >= len(interview_data['questions']) and not interview_data['follow_up_questions'],
-#         "has_follow_up": len(interview_data['follow_up_questions']) > 0
-#     })
-    
+ 
 
 @app.route('/process_answer', methods=['POST'])
 def process_answer():
@@ -1142,11 +1037,6 @@ def process_answer():
         logger.info("Interview complete, generating report")
         user_report = generate_interview_report(interview_data)
        
-
-         # Save admin report as plain text
-        admin_filepath, admin_filename = save_admin_report_txt(interview_data)
-        logger.info(f"Admin report saved: {admin_filepath}")
-
         # Optionally, save this path in session or database to serve later in admin dashboard
         
         return jsonify({
@@ -1165,6 +1055,9 @@ def process_answer():
         "interview_complete": False,
         "has_follow_up": len(interview_data['follow_up_questions']) > 0
     })
+
+
+
 
 from flask import send_from_directory
 
@@ -1202,33 +1095,6 @@ def check_pause():
 
 
 
-# @app.route('/generate_report', methods=['GET'])
-# def generate_report():
-#     logger.info("Generate report request received")
-#     interview_data = session.get('interview_data', init_interview_data())
-
-#     if not interview_data['interview_started']:
-#         logger.warning("Attempt to generate report before interview started")
-#         return jsonify({"status": "error", "message": "Interview not started"}), 400
-
-#     if not interview_data['end_time']:
-#         interview_data['end_time'] = datetime.now(timezone.utc)
-#         session['interview_data'] = interview_data
-#         logger.debug("Set end time for interview")
-
-#     # ✅ Generate admin report text file
-#     try:
-#         filepath, filename = save_admin_report_txt(interview_data)
-#         logger.info(f"Admin report saved at {filepath}")
-#     except Exception as e:
-#         logger.error(f"Failed to save admin report: {e}")
-
-#     # ✅ Generate user report for frontend
-#     report = generate_interview_report(interview_data)
-#     logger.info("Interview report generated")
-
-#     return jsonify(report)
-
 
 @app.route('/generate_report', methods=['GET'])
 def generate_report():
@@ -1243,6 +1109,18 @@ def generate_report():
         interview_data['end_time'] = datetime.now(timezone.utc)
         session['interview_data'] = interview_data
         logger.debug("Set end time for interview")
+
+    interview_data["candidate_name"] = session.get("candidate_name", "Anonymous")
+    interview_data["organization_name"] = session.get("organization_name", "N/A")
+    interview_data["email"] = session.get("email", "Not Provided")
+    interview_data["job_title"] = session.get("job_title", "Unknown")
+    interview_data["resume_text"] = session.get("resume_text", "")
+    interview_data["jd_text"] = session.get("jd_text", "")
+
+    if not interview_data.get('end_time'):
+        interview_data['end_time'] = datetime.now(timezone.utc)
+
+    session['interview_data'] = interview_data 
     
 
     # ✅ Generate admin report text file
@@ -1335,9 +1213,9 @@ def save_report_to_django(interview_data):
     report_txt = create_text_report_from_interview_data(interview_data)
 
     payload = {
-        "candidate_name": interview_data.get("candidate_name"),
+        "candidate_name": interview_data.get("candidate_name", session.get("candidate_name", "Anonymous")),
         "role": interview_data.get("role"),
-        "organization_name": interview_data.get("organization_name", "N/A"),
+        "organization_name": interview_data.get("organization_name", session.get("organization_name", "N/A")),
         "experience_level": interview_data.get("experience_level"),
         "years_experience": interview_data.get("years_experience", 0),
         "start_time": interview_data['start_time'].isoformat(),
