@@ -1127,12 +1127,7 @@ def generate_report():
     session['interview_data'] = interview_data 
     
 
-    # ✅ Generate admin report text file
-    try:
-        filepath, filename = save_report_to_django(interview_data)
-        logger.info(f"Admin report saved at {filepath}")
-    except Exception as e:
-        logger.error(f"Failed to save admin report: {e}")
+  
 
     # ✅ Save report to Django DB
     try:
@@ -1162,10 +1157,13 @@ def reset_interview():
 from datetime import datetime, timezone
 
 def create_text_report_from_interview_data(interview_data):
+    from datetime import datetime
 
+    # Extract main fields
     role = interview_data.get('role', 'Unknown Role')
     exp_level = interview_data.get('experience_level', 'Unknown')
     years = interview_data.get('years_experience', 0)
+    username_extrnal = interview_data.get('candidate_name', 'Anonymous')
 
     # Calculate average rating
     ratings = interview_data.get('ratings', [])
@@ -1174,25 +1172,35 @@ def create_text_report_from_interview_data(interview_data):
     # Calculate interview duration
     duration = "N/A"
     if interview_data.get('start_time') and interview_data.get('end_time'):
-        duration_seconds = (interview_data['end_time'] - interview_data['start_time']).total_seconds()
+        start = interview_data['start_time']
+        end = interview_data['end_time']
+        if isinstance(start, str):  # Parse from string if needed
+            start = datetime.fromisoformat(start.replace("Z", "+00:00"))
+        if isinstance(end, str):
+            end = datetime.fromisoformat(end.replace("Z", "+00:00"))
+        duration_seconds = (end - start).total_seconds()
         minutes = int(duration_seconds // 60)
         seconds = int(duration_seconds % 60)
         duration = f"{minutes}m {seconds}s"
 
-    # Build conversation with evaluation
+    # Build conversation with answered Q&A only
     conversation_history = interview_data.get('conversation_history', [])
     transcript = ""
     for idx, item in enumerate(conversation_history, 1):
-        question = item.get('question', 'N/A')
-        answer = item.get('answer', 'N/A')
+        question = item.get('question', '').strip()
+        answer = item.get('answer', '').strip()
         evaluation = item.get('evaluation', 'Not Evaluated')
-        transcript += f"""
+        if answer and answer.upper() != "N/A":
+            transcript += f"""
 Q{idx}: {question}
 A{idx}: {answer}
 ✅ Evaluation: {evaluation}
 """
 
-    # Final report
+    # Determine candidate suitability
+    suitability = "suitable" if avg_rating >= 6 else "not suitable"
+
+    # Final report text
     report_txt = f"""
 Interview Report for {username_extrnal}
 Role: {role}
@@ -1205,8 +1213,11 @@ Average Rating: {avg_rating:.1f}/10
 Conversation Transcript:
 {transcript.strip()}
 
+Summary: Based on the interview performance, the candidate is **{suitability}** for the role.
+
 End of Report
-"""
+""".strip()
+
     return report_txt
 
 
@@ -1220,8 +1231,6 @@ def save_report_to_django(interview_data):
         "candidate_name": username_extrnal,
         "role": interview_data.get("role"),
         "organization_name": organization_name_extrnal,
-        "experience_level": interview_data.get("experience_level"),
-        "years_experience": interview_data.get("years_experience", 0),
         "start_time": interview_data['start_time'].isoformat(),
         "end_time": interview_data['end_time'].isoformat(),
         "average_rating": sum(interview_data.get("ratings", [])) / len(interview_data.get("ratings", [])) if interview_data.get("ratings") else 0,
