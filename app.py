@@ -652,10 +652,10 @@ def generate_interview_report(interview_data):
         avg_rating = sum(interview_data['ratings']) / len(interview_data['ratings']) if interview_data['ratings'] else 0
         
         # Determine status based on average rating
-        if avg_rating >= 7:
+        if avg_rating >= 6:
             status = "Selected"
             status_class = "selected"
-        elif avg_rating >= 4 and avg_rating < 7:
+        elif avg_rating >= 3 and avg_rating < 6:
             status = "On Hold"
             status_class = "onhold"
         else:
@@ -818,7 +818,7 @@ def start_interview():
     interview_data['years_experience'] = int(session.get('years_experience', 0))
     interview_data['resume'] = session.get('resume_text')
     interview_data['jd'] = session.get('jd_text')
-    interview_data['candidate_name'] = session.get('candidate_name', 'Anonymous')
+    interview_data['candidate_name'] = session.get('user_name', 'Anonymous')
     interview_data['email'] = session.get('email')
 
     # Timestamps
@@ -1312,7 +1312,7 @@ def reset_interview():
 from datetime import datetime, timezone
 
 def create_text_report_from_interview_data(interview_data):
-    candidate = interview_data.get('candidate_name', 'Unknown Candidate')
+    candidate = interview_data.get('user_name', 'Unknown Candidate')
     role = interview_data.get('role', 'Unknown Role')
     exp_level = interview_data.get('experience_level', 'Unknown')
     years = interview_data.get('years_experience', 0)
@@ -1367,7 +1367,7 @@ def save_report_to_django(interview_data):
     report_txt = create_text_report_from_interview_data(interview_data)
 
     payload = {
-        "candidate_name": interview_data.get("candidate_name"),
+        "candidate_name": interview_data.get("user_name"),
         "role": interview_data.get("role"),
         "organization_name": interview_data.get("organization_name", "N/A"),
         "experience_level": interview_data.get("experience_level"),
