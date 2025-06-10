@@ -14,6 +14,7 @@ import json
 import logging
 from logging.handlers import RotatingFileHandler
 import requests
+import pdfkit
 
 
 app = Flask(__name__)
@@ -727,6 +728,9 @@ class JSONEncoder(json.JSONEncoder):
             return str(obj)
         return json.JSONEncoder.default(self, obj)
 
+
+
+
 @app.route('/')
 def home():
     logger.info("Home page accessed")
@@ -1128,23 +1132,47 @@ def generate_report():
         interview_data['end_time'] = datetime.now(timezone.utc)
 
     session['interview_data'] = interview_data 
-    
-
-  
-
-    # ✅ Save report to Django DB
-    try:
-        status_code, response = save_report_to_django(interview_data)
-        if status_code == 201:
-            logger.info("✅ Report successfully saved to Django DB.")
-        else:
-            logger.warning(f"⚠ Failed to save report to Django: {response}")
-    except Exception as e:
-        logger.error(f"❌ Exception while sending report to Django: {e}")
 
     # ✅ Generate user report for frontend
     report = generate_interview_report(interview_data)
     logger.info("Interview report generated")
+
+
+    
+    # ✅ Step 2: Convert HTML report to PDF
+    try:
+        pdf_binary = pdfkit.from_string(report["report"], False)  # False = return PDF as bytes
+        logger.info("PDF generated successfully")
+    except Exception as e:
+        logger.error(f"PDF generation failed: {e}")
+        return jsonify({"status": "error", "message": "PDF generation failed"}), 500
+
+    # ✅ Step 3: Prepare JSON + Base64 PDF for Django
+    django_payload = {
+        "candidate_name": interview_data["candidate_name"],
+        "role": interview_data["job_title"],
+        "organization_name": interview_data["organization_name"],
+        "years_experience": interview_data["years_experience"],
+        "start_time": interview_data["start_time"].isoformat(),
+        "end_time": interview_data["end_time"].isoformat(),
+        "average_rating": report["avg_rating"],
+        "status": report["status_class"].capitalize(),  # "Selected", "On Hold", etc.
+        "report_text": report["report"],
+        "pdf_file": base64.b64encode(pdf_binary).decode("utf-8")
+    }
+
+    # ✅ Step 4: Send to Django backend
+    try:
+        django_url = "https://ibot-backend.onrender.com/jobs/save-interview-report/"
+        django_response = requests.post(django_url, json=django_payload, headers={"Content-Type": "application/json"})
+
+        if django_response.status_code == 201:
+            logger.info("Report successfully sent to Django backend")
+        else:
+            logger.warning(f"Failed to save report in Django: {django_response.text}")
+
+    except Exception as e:
+        logger.error(f"Failed to send data to Django: {e}")
 
     return jsonify(report)
 
