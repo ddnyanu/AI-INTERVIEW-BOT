@@ -163,8 +163,8 @@ def before_request():
     session.permanent = True
 
 
-username_extrnal="dnyaneshwar dhotre"
-organization_name_extrnal="a2z"
+username_extrnal=""
+organization_name_extrnal=""
 
 @app.route('/jobs/interview/<token>/')
 def interview(token):
@@ -575,10 +575,10 @@ def evaluate_response(answer, question, role, experience_level, visual_feedback=
     Answer: "{answer}"
 
     Provide ONLY a numeric rating from 1-10 based on:
-    - Relevance to question (20%)
-    - Depth of knowledge (30%)
-    - Clarity of communication (20%)
-    - Specific examples provided (20%)
+    - Relevance to question (55%)
+    - Depth of knowledge (20%)
+    - Clarity of communication (10%)
+    - Specific examples provided (5%)
     - Professionalism (10%)
     """
 
