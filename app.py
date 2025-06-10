@@ -262,8 +262,8 @@ Years: {years_experience}
 
 1. **5 technical questions from Resume**
 2. **5 technical questions from Job Description**
-3. **5 questions based on Experience**
-4. **5 questions based on Role responsibilities & expectations**
+3. **2 questions based on Experience**
+4. **3 questions based on Role responsibilities & expectations**
 
  Guidelines:
 - Each main question must be followed by 2 intelligent follow-ups (use chain of thought)
@@ -1009,6 +1009,10 @@ def process_answer():
         visual_feedback
     )
     interview_data['ratings'].append(rating)
+    for entry in reversed(interview_data['conversation_history']):
+     if entry.get('speaker') == 'user' and 'evaluation' not in entry:
+        entry['evaluation'] = rating
+        break
     logger.debug(f"Response rated: {rating}/10")
     
     if (interview_data['current_topic'] and len(answer.split()) > 15 and 
@@ -1035,22 +1039,20 @@ def process_answer():
                 logger.debug(f"Added dynamic follow-up: {dynamic_follow_up}")
     
     # Check if interview is completed
-    interview_complete = interview_data['current_question'] >= len(interview_data['questions']) and not interview_data['follow_up_questions']
+    if not interview_data['follow_up_questions']:
+     interview_data['current_question'] += 1
 
-    if interview_complete:
-        logger.info("Interview complete, generating report")
-        user_report = generate_interview_report(interview_data)
-       
-        # Optionally, save this path in session or database to serve later in admin dashboard
-        
-        return jsonify({
-            "status": "interview_complete",
-            "message": "Interview complete, report generated and saved.",
-             "report_html": user_report.get('reports', ''),  # send HTML for user UI display
-       
-        })
-    
+# Now check if interview is completed
+    interview_complete = interview_data['current_question'] >= len(interview_data['questions'])
     session['interview_data'] = interview_data
+    if interview_complete:
+     logger.info("Interview complete")
+     return jsonify({
+        "status": "interview_complete",
+        "message": "Interview complete. Report will be generated soon."
+    })
+    
+   
     
     return jsonify({
         "status": "answer_processed",
@@ -1156,15 +1158,86 @@ def reset_interview():
 
 from datetime import datetime, timezone
 
+# def create_text_report_from_interview_data(interview_data):
+#     from datetime import datetime
+
+#     # Extract main fields
+#     role = interview_data.get('role', 'Unknown Role')
+#     username_extrnal = interview_data.get('candidate_name', 'Anonymous')
+
+#     answered_questions = [
+#     item for item in interview_data.get("conversation_history", [])
+#     if item.get("answer") and item.get("evaluation") and isinstance(item.get("evaluation"), (int, float))
+# ]
+
+#     ratings = [item["evaluation"] for item in answered_questions]
+#     avg_rating = sum(ratings) / len(ratings) if ratings else 0
+
+
+
+#     # Calculate interview duration
+#     duration = "N/A"
+#     if interview_data.get('start_time') and interview_data.get('end_time'):
+#         start = interview_data['start_time']
+#         end = interview_data['end_time']
+#         if isinstance(start, str):  # Parse from string if needed
+#             start = datetime.fromisoformat(start.replace("Z", "+00:00"))
+#         if isinstance(end, str):
+#             end = datetime.fromisoformat(end.replace("Z", "+00:00"))
+#         duration_seconds = (end - start).total_seconds()
+#         minutes = int(duration_seconds // 60)
+#         seconds = int(duration_seconds % 60)
+#         duration = f"{minutes}m {seconds}s"
+
+#     # Build conversation with answered Q&A only
+#     conversation_history = interview_data.get('conversation_history', [])
+#     transcript = ""
+#     for idx, item in enumerate(conversation_history, 1):
+#         question = item.get('question', '').strip()
+#         answer = item.get('answer', '').strip()
+#         evaluation = item.get('evaluation', 'Not Evaluated')
+#         if answer and answer.upper() != "N/A":
+#             transcript += f"""
+
+
+# Q{idx}: {question}
+# A{idx}: {answer}
+# ✅ Evaluation: {evaluation}
+# """
+
+#     # Determine candidate suitability
+#     suitability = "suitable" if avg_rating >= 6 else "not suitable"
+
+#     # Final report text
+#     report_txt = f"""
+# Interview Report for {username_extrnal}
+
+# Interview Duration: {duration}
+# Average Rating: {avg_rating:.1f}/10
+
+# Conversation Transcript:
+# {transcript.strip()}
+
+# Summary: Based on the interview performance, the candidate is **{suitability}** for the role.
+
+# End of Report
+# """.strip()
+
+#     return report_txt
+
 def create_text_report_from_interview_data(interview_data):
     from datetime import datetime
 
-    # Extract main fields
+    # Extract key fields
     role = interview_data.get('role', 'Unknown Role')
-    username_extrnal = interview_data.get('candidate_name', 'Anonymous')
+    username_external = interview_data.get('candidate_name', 'Anonymous')
 
-    # Calculate average rating
-    ratings = interview_data.get('ratings', [])
+    # Filter only answered & evaluated questions
+    answered_questions = [
+        item for item in interview_data.get("conversation_history", [])
+        if item.get("answer") and item.get("evaluation") and isinstance(item.get("evaluation"), (int, float))
+    ]
+    ratings = [item["evaluation"] for item in answered_questions]
     avg_rating = sum(ratings) / len(ratings) if ratings else 0
 
     # Calculate interview duration
@@ -1172,7 +1245,7 @@ def create_text_report_from_interview_data(interview_data):
     if interview_data.get('start_time') and interview_data.get('end_time'):
         start = interview_data['start_time']
         end = interview_data['end_time']
-        if isinstance(start, str):  # Parse from string if needed
+        if isinstance(start, str):
             start = datetime.fromisoformat(start.replace("Z", "+00:00"))
         if isinstance(end, str):
             end = datetime.fromisoformat(end.replace("Z", "+00:00"))
@@ -1181,34 +1254,40 @@ def create_text_report_from_interview_data(interview_data):
         seconds = int(duration_seconds % 60)
         duration = f"{minutes}m {seconds}s"
 
-    # Build conversation with answered Q&A only
-    conversation_history = interview_data.get('conversation_history', [])
+    # Build transcript only for answered questions
     transcript = ""
-    for idx, item in enumerate(conversation_history, 1):
-        question = item.get('question', '').strip()
-        answer = item.get('answer', '').strip()
+    idx = 1
+    for item in interview_data.get("conversation_history", []):
+        question = item.get('question') or item.get('text', '') if item.get('speaker') == 'bot' else ''
+        answer = item.get('answer') or item.get('text', '') if item.get('speaker') == 'user' else ''
+
         evaluation = item.get('evaluation', 'Not Evaluated')
+
         if answer and answer.upper() != "N/A":
             transcript += f"""
 Q{idx}: {question}
 A{idx}: {answer}
 ✅ Evaluation: {evaluation}
 """
+            idx += 1
 
     # Determine candidate suitability
     suitability = "suitable" if avg_rating >= 6 else "not suitable"
 
-    # Final report text
+    # Final formatted report
     report_txt = f"""
-Interview Report for {username_extrnal}
+Interview Report for {username_external}
 
+Role: {role}
 Interview Duration: {duration}
 Average Rating: {avg_rating:.1f}/10
 
 Conversation Transcript:
 {transcript.strip()}
 
-Summary: Based on the interview performance, the candidate is **{suitability}** for the role.
+Summary:
+The candidate answered {len(answered_questions)} questions.
+Based on the interview performance, the candidate is **{suitability}** for the role.
 
 End of Report
 """.strip()
@@ -1216,14 +1295,51 @@ End of Report
     return report_txt
 
 
+import requests
+
+# def save_report_to_django(interview_data):
+#     report_txt = create_text_report_from_interview_data(interview_data)
+
+#     candidate_name = username_extrnal
+#     organization_name = organization_name_extrnal
+
+#     payload = {
+#         "candidate_name": candidate_name,
+#         "role": interview_data.get("role"),
+#         "organization_name": organization_name,
+#         "start_time": interview_data['start_time'].isoformat(),
+#         "end_time": interview_data['end_time'].isoformat(),
+#         "average_rating": average_rating,,
+#         "status": "Completed",
+#         "report_text": report_txt
+#     }
+
+#     try:
+#         response = requests.post("https://ibot-backend.onrender.com/jobs/save-report/", json=payload)
+#         print("✅ Django API response:", response.status_code, response.text)
+#         return response.status_code, response.json()
+#     except Exception as e:
+#         print("❌ Error sending report to Django:", str(e))
+#         return 500, {"error": str(e)}
+
 
 import requests
 
 def save_report_to_django(interview_data):
+    # ✅ Create proper report text
     report_txt = create_text_report_from_interview_data(interview_data)
 
-    candidate_name = username_extrnal
-    organization_name = organization_name_extrnal
+    # ✅ Safely calculate average rating from evaluated answers
+    answered_questions = [
+        item for item in interview_data.get("conversation_history", [])
+        if item.get("answer") and item.get("evaluation") and isinstance(item.get("evaluation"), (int, float))
+    ]
+    ratings = [item["evaluation"] for item in answered_questions]
+    average_rating = sum(ratings) / len(ratings) if ratings else 0
+
+    # ✅ Extract other required fields
+    candidate_name = interview_data.get("candidate_name", "Anonymous")
+    organization_name = interview_data.get("organization_name", "N/A")
 
     payload = {
         "candidate_name": candidate_name,
@@ -1231,7 +1347,7 @@ def save_report_to_django(interview_data):
         "organization_name": organization_name,
         "start_time": interview_data['start_time'].isoformat(),
         "end_time": interview_data['end_time'].isoformat(),
-        "average_rating": sum(interview_data.get("ratings", [])) / len(interview_data.get("ratings", [])) if interview_data.get("ratings") else 0,
+        "average_rating": average_rating,
         "status": "Completed",
         "report_text": report_txt
     }
@@ -1243,7 +1359,6 @@ def save_report_to_django(interview_data):
     except Exception as e:
         print("❌ Error sending report to Django:", str(e))
         return 500, {"error": str(e)}
-
 
 
 
