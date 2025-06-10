@@ -1161,8 +1161,6 @@ def create_text_report_from_interview_data(interview_data):
 
     # Extract main fields
     role = interview_data.get('role', 'Unknown Role')
-    exp_level = interview_data.get('experience_level', 'Unknown')
-    years = interview_data.get('years_experience', 0)
     username_extrnal = interview_data.get('candidate_name', 'Anonymous')
 
     # Calculate average rating
@@ -1203,9 +1201,6 @@ A{idx}: {answer}
     # Final report text
     report_txt = f"""
 Interview Report for {username_extrnal}
-Role: {role}
-Experience Level: {exp_level}
-Years of Experience: {years}
 
 Interview Duration: {duration}
 Average Rating: {avg_rating:.1f}/10
@@ -1227,10 +1222,13 @@ import requests
 def save_report_to_django(interview_data):
     report_txt = create_text_report_from_interview_data(interview_data)
 
+    candidate_name = username_extrnal
+    organization_name = organization_name_extrnal
+
     payload = {
-        "candidate_name": username_extrnal,
+        "candidate_name": candidate_name,
         "role": interview_data.get("role"),
-        "organization_name": organization_name_extrnal,
+        "organization_name": organization_name,
         "start_time": interview_data['start_time'].isoformat(),
         "end_time": interview_data['end_time'].isoformat(),
         "average_rating": sum(interview_data.get("ratings", [])) / len(interview_data.get("ratings", [])) if interview_data.get("ratings") else 0,
@@ -1248,56 +1246,6 @@ def save_report_to_django(interview_data):
 
 
 
-
-
-
-# def create_text_report_from_interview_data(interview_data):
-#     candidate = interview_data.get('candidate_name', 'Unknown Candidate')
-#     role = interview_data.get('role', 'Unknown Role')
-#     exp_level = interview_data.get('experience_level', 'Unknown')
-#     years = interview_data.get('years_experience', 0)
-
-#     # Calculate average rating
-#     ratings = interview_data.get('ratings', [])
-#     avg_rating = sum(ratings) / len(ratings) if ratings else 0
-
-#     # Calculate interview duration
-#     duration = "N/A"
-#     if interview_data.get('start_time') and interview_data.get('end_time'):
-#         duration_seconds = (interview_data['end_time'] - interview_data['start_time']).total_seconds()
-#         minutes = int(duration_seconds // 60)
-#         seconds = int(duration_seconds % 60)
-#         duration = f"{minutes}m {seconds}s"
-
-#     # Build conversation with evaluation
-#     conversation_history = interview_data.get('conversation_history', [])
-#     transcript = ""
-#     for idx, item in enumerate(conversation_history, 1):
-#         question = item.get('question', 'N/A')
-#         answer = item.get('answer', 'N/A')
-#         evaluation = item.get('evaluation', 'Not Evaluated')
-#         transcript += f"""
-# Q{idx}: {question}
-# A{idx}: {answer}
-# ✅ Evaluation: {evaluation}
-# """
-
-#     # Final report
-#     report_txt = f"""
-# Interview Report for {candidate}
-# Role: {role}
-# Experience Level: {exp_level}
-# Years of Experience: {years}
-
-# Interview Duration: {duration}
-# Average Rating: {avg_rating:.1f}/10
-
-# Conversation Transcript:
-# {transcript.strip()}
-
-# End of Report
-# """
-#     return report_txt
 
 
 
