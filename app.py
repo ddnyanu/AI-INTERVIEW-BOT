@@ -701,6 +701,7 @@ def generate_interview_report(interview_data):
         logger.debug("Converting voice feedback to audio")
         voice_audio = text_to_speech(voice_feedback)
         
+        session['interview_data'] = interview_data  # Save updated interview data to session
         return {
             "status": "success",
             "report": report_content,
