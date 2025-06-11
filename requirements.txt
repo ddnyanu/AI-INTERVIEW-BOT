@@ -124,7 +124,6 @@ proglog==0.1.11
 propcache==0.3.1
 protobuf==6.30.2
 pyarrow==20.0.0
-PyAudio==0.2.14
 pycparser==2.22
 pydantic==2.11.3
 pydantic-settings==2.9.1
