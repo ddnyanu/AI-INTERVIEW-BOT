@@ -94,11 +94,11 @@ co = cohere.Client(cohere_api_key)
 # Configuration
 MAX_FRAME_SIZE = 500
 FRAME_CAPTURE_INTERVAL = 5
-MAX_RECORDING_DURATION = 520
+MAX_RECORDING_DURATION = 1800    # 30 minutes
 PAUSE_THRESHOLD = 40
 FOLLOW_UP_PROBABILITY = 0.8
-MIN_FOLLOW_UPS = 1
-MAX_FOLLOW_UPS = 2  # Exactly 2 follow-ups per question
+MIN_FOLLOW_UPS = 2
+MAX_FOLLOW_UPS = 3  # Exactly 2 follow-ups per question
 CONVERSATION_FILE = "interview_conversation.txt"
 
 def init_interview_data():
@@ -868,7 +868,7 @@ def get_question():
 
     # === Timer Logic (e.g., interview for 15 minutes max) ===
     elapsed_time = datetime.now(timezone.utc) - interview_data.get('start_time', datetime.now(timezone.utc))
-    max_duration = timedelta(minutes=20)  # Change as needed
+    max_duration = timedelta(minutes=30)  # Change as needed
     if elapsed_time > max_duration:
         logger.info("Interview duration exceeded.")
         return jsonify({"status": "time_exceeded", "message": "Interview time has ended."})
@@ -1185,7 +1185,7 @@ def generate_report():
 
     # ✅ Step 4: Send to Django backend
     try:
-        django_url = "https://ibot-backend.onrender.com/jobs/save-interview-report/"
+        django_url = "https://ibot-backend.onrender.com/jobs/store-interview-report/"
         django_response = requests.post(django_url, json=django_payload, headers={"Content-Type": "application/json"})
 
         if django_response.status_code == 201:
@@ -1404,7 +1404,7 @@ def save_report_to_django(interview_data):
     }
 
     try:
-        response = requests.post("https://ibot-backend.onrender.com/jobs/save-report/", json=payload)
+        response = requests.post("https://ibot-backend.onrender.com/jobs/store-interview-report/", json=payload)
         print("✅ Django API response:", response.status_code, response.text)
         return response.status_code, response.json()
     except Exception as e:
