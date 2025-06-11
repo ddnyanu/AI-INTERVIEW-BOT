@@ -14,7 +14,19 @@ import json
 import logging
 from logging.handlers import RotatingFileHandler
 import requests
-import pdfkit
+from xhtml2pdf import pisa
+from io import BytesIO
+
+
+def html_to_pdf(html_content):
+    result = BytesIO()
+    pisa_status = pisa.CreatePDF(html_content, dest=result)
+    if pisa_status.err:
+        return None
+    return result.getvalue()
+
+
+
 
 
 app = Flask(__name__)
@@ -671,6 +683,7 @@ def generate_interview_report(interview_data):
         
         report_content = response.generations[0].text  # Access the generated report content from Cohere
         logger.debug("Received report content from Cohere")
+
         
         # Generate voice feedback from the report using Cohere
         voice_feedback_prompt = f"""
@@ -722,6 +735,10 @@ def generate_interview_report(interview_data):
             "voice_feedback": "We encountered an error generating your feedback.",
             "voice_audio": None
         }
+
+
+
+
 class JSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (datetime, np.integer)):
@@ -1136,16 +1153,21 @@ def generate_report():
     # ✅ Generate user report for frontend
     report = generate_interview_report(interview_data)
     logger.info("Interview report generated")
-
-
+    
+   
     
     # ✅ Step 2: Convert HTML report to PDF
-    try:
-        pdf_binary = pdfkit.from_string(report["report"], False)  # False = return PDF as bytes
-        logger.info("PDF generated successfully")
-    except Exception as e:
-        logger.error(f"PDF generation failed: {e}")
+    html_report = report.get("report", "")
+    if report["status"] == "error":
+        return jsonify(report), 500
+    
+
+    pdf_binary = html_to_pdf(html_report)
+    if not pdf_binary:
+        logger.error("PDF generation failed")
         return jsonify({"status": "error", "message": "PDF generation failed"}), 500
+    
+
 
     # ✅ Step 3: Prepare JSON + Base64 PDF for Django
     django_payload = {
@@ -1157,7 +1179,7 @@ def generate_report():
         "end_time": interview_data["end_time"].isoformat(),
         "average_rating": report["avg_rating"],
         "status": report["status_class"].capitalize(),  # "Selected", "On Hold", etc.
-        "report_text": report["report"],
+        "report_text": html_report,
         "pdf_file": base64.b64encode(pdf_binary).decode("utf-8")
     }
 
