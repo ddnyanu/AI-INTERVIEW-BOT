@@ -1085,21 +1085,52 @@ def process_answer():
         except Exception as e:
             logger.error(f"Error processing frame: {str(e)}", exc_info=True)
     
+
+
+    # logger.debug("Evaluating response quality")
+    # rating = evaluate_response(
+    #     answer, 
+    #     current_question, 
+    #     interview_data['role'],
+    #     interview_data['experience_level'],
+    #     visual_feedback
+    # )
+    # interview_data['ratings'].append(rating)
+    # for entry in reversed(interview_data['conversation_history']):
+    #  if entry.get('speaker') == 'user' and 'evaluation' not in entry:
+    #     entry['evaluation'] = rating
+    #     break
+    # logger.debug(f"Response rated: {rating}/10")
+     
+    
     logger.debug("Evaluating response quality")
-    rating = evaluate_response(
+    rating_data = evaluate_response(
         answer, 
         current_question, 
         interview_data['role'],
         interview_data['experience_level'],
         visual_feedback
     )
+
+    # Extract final rating safely
+    try:
+        rating = float(rating_data.get("final_rating", 5))  # default to 5 if not present
+    except Exception as e:
+        logger.warning(f"Could not parse rating: {rating_data}, error: {e}, returning default rating")
+        rating = 5
+
     interview_data['ratings'].append(rating)
+
+    # Update latest user message with evaluation
     for entry in reversed(interview_data['conversation_history']):
-     if entry.get('speaker') == 'user' and 'evaluation' not in entry:
-        entry['evaluation'] = rating
-        break
+        if entry.get('speaker') == 'user' and 'evaluation' not in entry:
+            entry['evaluation'] = rating
+            break
+
     logger.debug(f"Response rated: {rating}/10")
     
+
+
     if (interview_data['current_topic'] and len(answer.split()) > 15 and 
         interview_data['follow_up_count'] < MAX_FOLLOW_UPS):
         
