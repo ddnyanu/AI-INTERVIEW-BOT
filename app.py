@@ -848,7 +848,7 @@ def start_interview():
     logger.debug(f"Received resume text (first 300 chars): {resume_text[:300]}")
     logger.debug(f"Received JD text (first 300 chars): {jd_text[:300]}")
 
-    candidate_name = data.get('fileName', 'Candidate')  # match the key sent from JS
+    candidate_name = session.get('candidate_name', 'Anonymous')  # match the key sent from JS
     candidate_name = candidate_name.split('.')[0].replace('_', ' ').replace('-', ' ')
     print("Candidate Name:----------------------------------------------------------", candidate_name)
     

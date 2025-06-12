@@ -193,11 +193,29 @@ $(document).ready(function() {
         $('#conversationContainer').scrollTop($('#conversationContainer')[0].scrollHeight);
     }
 
+    // function updateProgress(current, total) {
+    //     const percent = (current / total) * 100;
+    //     $('#progressBar').css('width', `${percent}%`).attr('aria-valuenow', percent);
+    //     $('#progressBar').text(`Question ${current} of ${total}`);
+    // }
+
+
     function updateProgress(current, total) {
-        const percent = (current / total) * 100;
-        $('#progressBar').css('width', `${percent}%`).attr('aria-valuenow', percent);
-        $('#progressBar').text(`Question ${current} of ${total}`);
-    }
+    let displayCurr = current + 1;
+    if (displayCurr > total) displayCurr = total;
+
+    const percent = Math.round((displayCurr / total) * 100);
+
+    $('#progressBar').css('width', `${percent}%`).attr('aria-valuenow', percent);
+    $('#progressTextDisplay').text(`${percent}% Complete`);
+    $('#currentQuestionNum').text(displayCurr);  
+}
+
+
+    
+
+
+
 
     function formatReportText(text) {
         return text.replace(/\n/g, '<br>')
