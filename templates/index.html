@@ -280,15 +280,6 @@
 
 <body>
 
-    <!-- <div class="container-fluid">
-        <div class="row header">
-            <div class="col-12 text-center">
-                <h1><i class="fas fa-robot"></i> Voice Interview Bot</h1>
-                <p class="tagline">Practice your interview skills with our AI interviewer</p>
-            </div>
-        </div>
-    <div> -->
-
 
 <div class="container-fluid">
     <div class="row header">
@@ -403,7 +394,7 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h3>Voice Interview</h3>
-                        <div id="progressText">Question <span id="currentQuestionNum">1</span> of <span id="totalQuestions">5</span></div>
+                        <div id="progressText">Question <span id="currentQuestionNum">1</span> of <span id="totalQuestions"></span></div>
                     </div>
                     <div class="card-body">
                         <div class="interview-container">
@@ -434,11 +425,6 @@
             </div>
         </div>
 
-        <!-- Start new interview button -->
-        <!-- <button id="startNewInterviewBtn" class="start-new-btn">
-            <i class="fas fa-redo"></i> Start New Interview
-        </button>
-    </div> -->
 
     <!-- Report Modal -->
     <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
@@ -499,36 +485,6 @@
                     $('#experienceFields').hide();
                 }
             });
-
-            // async function extractPdfText(file) {
-            //     return new Promise((resolve, reject) => {
-            //         const reader = new FileReader();
-            //         reader.onload = async function () {
-            //             const typedArray = new Uint8Array(reader.result);
-            //             try {
-            //                 const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
-            //                 let text = '';
-            //                 for (let i = 1; i <= pdf.numPages; i++) {
-            //                     const page = await pdf.getPage(i);
-            //                     const content = await page.getTextContent();
-            //                     text += content.items.map(item => item.str).join(' ') + '\n';
-            //                 }
-            //                 resolve(text);
-            //             } catch (err) {
-            //                 reject(err);
-            //             }
-            //         };
-            //         reader.onerror = reject;
-            //         reader.readAsArrayBuffer(file);
-            //     });
-            // }
-
-            // async function getFileTextOrPdf(input) {
-            //     const file = input.files[0];
-            //     if (!file) return '';
-            //     const isPdf = file.name.endsWith('.pdf');
-            //     return isPdf ? await extractPdfText(file) : await file.text();
-            // }
 
             function startTimer() {
                 clearInterval(timerInterval);

@@ -26,7 +26,7 @@ $(document).ready(function() {
                     $('.setup-section').hide();
                     $('.interview-section').show();
                     addMessage('bot', response.greeting);
-                    updateProgress(0, response.total_questions);
+                    updateProgress(1, response.total_questions);
                     getNextQuestion();
                 }
             },

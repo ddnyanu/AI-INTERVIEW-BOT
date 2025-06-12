@@ -300,7 +300,7 @@ ONLY use the above format. Do NOT include labels like "Section", "Greeting".
         response = co.generate(
             model="command-r-plus",
             prompt=prompt,
-            temperature=0.7,
+            temperature=0.5,
             max_tokens=2000
         )
         script = response.generations[0].text
@@ -315,6 +315,8 @@ ONLY use the above format. Do NOT include labels like "Section", "Greeting".
 
 
         questions = []
+        count = len(questions)
+        logger.debug(f"Initial question count---------------: {count}")
         question_topics = []
         current_block = {}
 
@@ -347,9 +349,9 @@ ONLY use the above format. Do NOT include labels like "Section", "Greeting".
 
         # Trim the list based on experience level
         if experience_level == "fresher":
-            questions = questions[:4]  # Greeting, 2 tech, 1 behavioral
+            questions = questions[:10]  # Greeting, 2 tech, 1 behavioral
         else:
-            questions = questions[:5]  # Greeting, 2 tech, 1 behavioral, 1 achievement
+            questions = questions[:10]  # Greeting, 2 tech, 1 behavioral, 1 achievement
 
         logger.debug(f"Generated {len(questions)} questions with {len(question_topics)} topics")
         return questions, question_topics[:len(questions)]
@@ -498,7 +500,7 @@ def generate_encouragement_prompt(conversation_history):
             model="command-r-plus",  # Adjust the model to the one you want to use in Cohere
             prompt=prompt,
             max_tokens=300,
-            temperature=0.5
+            temperature=0.3
         )
 
 
@@ -521,13 +523,7 @@ def text_to_speech(text):
         
         tts.save(temp_filename)
         
-        # Commenting out pydub-related code
-        # audio = AudioSegment.from_mp3(temp_filename)
-        # wav_filename = temp_filename.replace('.mp3', '.wav')
-        # audio.export(wav_filename, format="wav")
-        
-        # with open(wav_filename, 'rb') as f:
-        #     audio_data = f.read()
+    
         
         # Read mp3 file directly instead
         with open(temp_filename, 'rb') as f:
@@ -581,26 +577,93 @@ def evaluate_response(answer, question, role, experience_level, visual_feedback=
         logger.debug("Short but acceptable answer, returning 4")
         return 4
 
-    # Construct the evaluation prompt for Cohere
-    rating_prompt = f"""
-    Analyze this interview response for a {role} position ({experience_level} candidate).
-    Question: "{question}"
-    Answer: "{answer}"
+    # # Construct the evaluation prompt for Cohere
+    # rating_prompt = f"""
+    # Analyze this interview response for a {role} position ({experience_level} candidate).
+    # Question: "{question}"
+    # Answer: "{answer}"
 
-    Provide ONLY a numeric rating from 1-10 based on:
-    - Relevance to question (55%)
-    - Depth of knowledge (20%)
-    - Clarity of communication (10%)
-    - Specific examples provided (5%)
-    - Professionalism (10%)
-    """
+    # Provide ONLY a numeric rating from 1-10 based on:
+    # - Relevance to question (55%)
+    # - Depth of knowledge (20%)
+    # - Clarity of communication (10%)
+    # - Specific examples provided (5%)
+    # - Professionalism (20%)
+    # """
+    rating_prompt = f"""
+You are assessing an interview response for a {role} position from a {experience_level} candidate.
+
+Question: "{question}"
+Answer: "{answer}"
+
+Evaluate the answer based on the following *five criteria*, each rated from 1 to 10. Sub-points are provided to guide your evaluation.
+
+1. *Relevance to Question (20%)*
+   - Does the answer directly address the question asked?
+   - Are the points focused and aligned with the expected intent?
+
+2. *Depth of Knowledge (30%)*
+   - Does the candidate demonstrate conceptual understanding?
+   - Are advanced points, frameworks, or reasoning shown?
+
+3. *Clarity of Communication (20%)*
+   - Is the answer well-structured and coherent?
+   - Are the thoughts clearly articulated and easy to follow?
+
+4. *Use of Specific Examples (20%)*
+   - Are real-world or personal experiences/examples included?
+   - Do examples enhance the answer’s credibility?
+
+5. *Professionalism (10%)*
+   - Is the tone confident, respectful, and professional?
+   - Is the language appropriate for a formal setting?
+
+---
+
+*Step 1:* Give a numeric score (1–10) for each of the 5 criteria listed above.
+
+*Step 2:* Calculate a *final rating* using these weights:
+- Relevance: 20%
+- Depth of Knowledge: 30%
+- Clarity: 20%
+- Examples: 20%
+- Professionalism: 10%
+
+*Step 3:* Classify the overall quality using the rating scale:
+- *9 to 10* → "Excellent: Fully correct and comprehensive answer"
+- *7 to 8* → "Good: Covers main points with clarity"
+- *5 to 6* → "Average: Partially correct or somewhat incomplete"
+- *3 to 4* → "Poor: Related to topic but lacks depth or clarity"
+- *1 to 2* → "Off-topic: Largely irrelevant or incorrect answer"
+
+---
+
+Only return the output in the following strict *JSON format*:
+
+{{
+  "relevance": <score>,
+  "knowledge_depth": <score>,
+  "clarity": <score>,
+  "examples": <score>,
+  "professionalism": <score>,
+  "final_rating": <weighted_average_score>,
+  "answer_quality": "<classification_text>"
+}}
+
+- final_rating must be rounded to 1 decimal place.
+- Do NOT include any other explanation or output.
+"""
+
+
+
+
 
     try:
         response = co.generate(
             model="command-r-plus",  # Replace with the appropriate Cohere model ID
             prompt=rating_prompt,
             max_tokens=100,
-            temperature=0.5
+            temperature=0.2
         )
         
         # Extract rating from Cohere's response
@@ -678,7 +741,7 @@ def generate_interview_report(interview_data):
             model="command-r-plus",  # Replace with the appropriate model for your task
             prompt=report_prompt,
             max_tokens=2000,
-            temperature=0.5
+            temperature=0.3
         )
         
         report_content = response.generations[0].text  # Access the generated report content from Cohere
@@ -705,7 +768,7 @@ def generate_interview_report(interview_data):
             model="command-r-plus",  # Replace with the appropriate model for your task
             prompt=voice_feedback_prompt,
             max_tokens=300,
-            temperature=0.5
+            temperature=0.3
         )
         
         voice_feedback = voice_response.generations[0].text.strip()  # Get the voice feedback text from Cohere
@@ -1209,72 +1272,7 @@ def reset_interview():
 
 from datetime import datetime, timezone
 
-# def create_text_report_from_interview_data(interview_data):
-#     from datetime import datetime
 
-#     # Extract main fields
-#     role = interview_data.get('role', 'Unknown Role')
-#     username_extrnal = interview_data.get('candidate_name', 'Anonymous')
-
-#     answered_questions = [
-#     item for item in interview_data.get("conversation_history", [])
-#     if item.get("answer") and item.get("evaluation") and isinstance(item.get("evaluation"), (int, float))
-# ]
-
-#     ratings = [item["evaluation"] for item in answered_questions]
-#     avg_rating = sum(ratings) / len(ratings) if ratings else 0
-
-
-
-#     # Calculate interview duration
-#     duration = "N/A"
-#     if interview_data.get('start_time') and interview_data.get('end_time'):
-#         start = interview_data['start_time']
-#         end = interview_data['end_time']
-#         if isinstance(start, str):  # Parse from string if needed
-#             start = datetime.fromisoformat(start.replace("Z", "+00:00"))
-#         if isinstance(end, str):
-#             end = datetime.fromisoformat(end.replace("Z", "+00:00"))
-#         duration_seconds = (end - start).total_seconds()
-#         minutes = int(duration_seconds // 60)
-#         seconds = int(duration_seconds % 60)
-#         duration = f"{minutes}m {seconds}s"
-
-#     # Build conversation with answered Q&A only
-#     conversation_history = interview_data.get('conversation_history', [])
-#     transcript = ""
-#     for idx, item in enumerate(conversation_history, 1):
-#         question = item.get('question', '').strip()
-#         answer = item.get('answer', '').strip()
-#         evaluation = item.get('evaluation', 'Not Evaluated')
-#         if answer and answer.upper() != "N/A":
-#             transcript += f"""
-
-
-# Q{idx}: {question}
-# A{idx}: {answer}
-# ✅ Evaluation: {evaluation}
-# """
-
-#     # Determine candidate suitability
-#     suitability = "suitable" if avg_rating >= 6 else "not suitable"
-
-#     # Final report text
-#     report_txt = f"""
-# Interview Report for {username_extrnal}
-
-# Interview Duration: {duration}
-# Average Rating: {avg_rating:.1f}/10
-
-# Conversation Transcript:
-# {transcript.strip()}
-
-# Summary: Based on the interview performance, the candidate is **{suitability}** for the role.
-
-# End of Report
-# """.strip()
-
-#     return report_txt
 
 def create_text_report_from_interview_data(interview_data):
     from datetime import datetime
@@ -1348,33 +1346,7 @@ End of Report
 
 import requests
 
-# def save_report_to_django(interview_data):
-#     report_txt = create_text_report_from_interview_data(interview_data)
 
-#     candidate_name = username_extrnal
-#     organization_name = organization_name_extrnal
-
-#     payload = {
-#         "candidate_name": candidate_name,
-#         "role": interview_data.get("role"),
-#         "organization_name": organization_name,
-#         "start_time": interview_data['start_time'].isoformat(),
-#         "end_time": interview_data['end_time'].isoformat(),
-#         "average_rating": average_rating,,
-#         "status": "Completed",
-#         "report_text": report_txt
-#     }
-
-#     try:
-#         response = requests.post("https://ibot-backend.onrender.com/jobs/save-report/", json=payload)
-#         print("✅ Django API response:", response.status_code, response.text)
-#         return response.status_code, response.json()
-#     except Exception as e:
-#         print("❌ Error sending report to Django:", str(e))
-#         return 500, {"error": str(e)}
-
-
-import requests
 
 def save_report_to_django(interview_data):
     # ✅ Create proper report text
