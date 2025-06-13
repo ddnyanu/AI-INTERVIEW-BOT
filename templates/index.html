@@ -710,6 +710,11 @@
                 });
             }
 
+
+
+
+
+
             function startRecording() {
                 if (!isRecording && interviewInProgress) {
                     try {
@@ -754,7 +759,7 @@
                 
                 // Update progress
                 updateProgress(response.current_question, response.total_questions);
-                $('#currentQuestionNum').text(response.current_question + 1);
+                // $('#currentQuestionNum').text(response.current_question + 1);
                 
                 if (response.interview_complete) {
                     interviewComplete();
@@ -806,11 +811,27 @@
                 }
             }
             
-            function updateProgress(current, total) {
-                const percent = Math.round((current / total) * 100);
-                $('#progressBar').css('width', percent + '%');
-                $('#progressTextDisplay').text(`${percent}% Complete`);
-            }
+            // function updateProgress(current, total) {
+            //     const percent = Math.round((current / total) * 100);
+            //     $('#progressBar').css('width', percent + '%');
+            //     $('#progressTextDisplay').text(`${percent}% Complete`);
+            // }
+
+
+                function updateProgress(current, total) {
+    let displayCurr = current;
+    if (displayCurr > total) displayCurr = total;
+
+    const percent = Math.round((displayCurr / total) * 100);
+
+    $('#progressBar').css('width', `${percent}%`).attr('aria-valuenow', percent);
+    $('#progressTextDisplay').text(`${percent}% Complete`);
+    $('#currentQuestionNum').text(displayCurr);  
+}
+            
+
+
+
             
             $('#micButton').click(function() {
                 if (!interviewInProgress) return;

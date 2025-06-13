@@ -200,16 +200,7 @@ $(document).ready(function() {
     // }
 
 
-    function updateProgress(current, total) {
-    let displayCurr = current + 1;
-    if (displayCurr > total) displayCurr = total;
 
-    const percent = Math.round((displayCurr / total) * 100);
-
-    $('#progressBar').css('width', `${percent}%`).attr('aria-valuenow', percent);
-    $('#progressTextDisplay').text(`${percent}% Complete`);
-    $('#currentQuestionNum').text(displayCurr);  
-}
 
 
     
