@@ -1,0 +1,1093 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Interview Bot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- <style>
+        
+        body {
+            background-color: #222831;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+       .header {
+    background: linear-gradient(135deg, #222831);
+    color: #dfd0b8;
+    margin-bottom: 2rem;
+    border-radius: 0 0 10px 10px;
+    height: 8rem;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+}
+
+.header .row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+
+        .interview-container {
+            height: 70vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #dfd0b8;
+        }
+        .mic-button {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: #222831;
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        .mic-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+        .mic-button.recording {
+            animation: pulse 1.5s infinite;
+            background-color: #393e46;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .progress-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 20px auto;
+            color: #222831;
+        }
+        .progress-text {
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .interview-complete-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+        .report-modal {
+            max-width: 800px;
+        }
+        .report-content {
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+        .report-header {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            color: white;
+        }
+        .final-feedback {
+            margin-top: 20px;
+        }
+        .setup-section .card {
+            
+            color: #000000;
+        }
+        .interview-section {
+            display: none;
+        }
+        .interview-section .card {
+            background: linear-gradient(270deg, #FEF3F4 0%, #FFFFFF 100%);
+            color: #000000;
+            height: 80vh;
+        }
+        .start-new-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 10px 20px;
+            font-weight: bold;
+            background-color: #222831;
+            border-color: #393e46;
+            color: white;
+        }
+        .start-new-btn:hover {
+            background-color: #222831;
+            border-color: #393e46;
+            color: white;
+        }
+        .experience-fields {
+            display: none;
+        }
+        .report-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        /* .camera-container {
+            position: relative;
+            width: 320px;
+            height: 240px;
+            margin: 20px auto;
+            border: 2px solid #222831;
+            border-radius: 8px;
+            overflow: hidden;
+        } */
+        .camera-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .status-badge {
+            font-size: 1.2rem;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+        }
+        .status-selected {
+            background-color: #28a745;
+            color: white;
+        }
+        .status-onhold {
+            background-color: #ffc107;
+            color: black;
+        }
+        .status-rejected {
+            background-color: #dc3545;
+            color: white;
+        }
+        .strengths-section {
+            background-color: #f0fff0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .improvements-section {
+            background-color: #fff8f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .strengths-section h4, .improvements-section h4 {
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+        .strengths-section i {
+            margin-right: 10px;
+        }
+        .improvements-section i {
+            margin-right: 10px;
+        }
+        .rating-badge {
+            font-size: 0.9rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            background-color: #6c757d;
+            color: white;
+        }
+        .rating-excellent {
+            background-color: #28a745;
+        }
+        .rating-good {
+            background-color: #17a2b8;
+        }
+        .rating-average {
+            background-color: #ffc107;
+            color: black;
+        }
+        .rating-poor {
+            background-color: #dc3545;
+        }
+        .report-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .report-section h4 {
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 8px;
+        }
+        .strength-item {
+            background-color: #e6f7e6;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .improvement-item {
+            background-color: #fff3e6;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .final-decision {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .decision-selected {
+            color: #28a745;
+        }
+        .decision-onhold {
+            color: #ffc107;
+        }
+        .decision-rejected {
+            color: #dc3545;
+        }
+        .report-table {
+            width: 100%;
+            margin-bottom: 1rem;
+            color: #212529;
+            border-collapse: collapse;
+        }
+        .report-table th, .report-table td {
+            padding: 0.75rem;
+            vertical-align: top;
+            border-top: 1px solid #dee2e6;
+        }
+        .report-table thead th {
+            vertical-align: bottom;
+            border-bottom: 2px solid #dee2e6;
+            background-color: rgba(0,0,0,.03);
+        }
+        .report-table tbody + tbody {
+            border-top: 2px solid #dee2e6;
+        }
+
+        
+    </style> -->
+</head>
+
+
+
+
+
+
+<body style="background-color: #222831;">
+<!-- header -->
+<div class="col-md-12 d-flex align-items-center " 
+     style="padding: 5px; background-color: #495057; height: 40px; width: 70%; 
+            border-radius: 15px; margin: 15px auto; 
+            box-shadow: 0 4px 10px rgba(223, 204, 130, 0.701); justify-content: center;">
+  
+  <img src="/static/media/botImage.png" 
+       alt="Bot Logo" 
+       style="width: 50px; height: 50px; margin-right: 15px;" />
+  
+  <h1 style="margin: 0; color: #DFD0B8; font-size: 1.4rem;">NEX AI Interview Bot</h1>
+</div>
+
+
+
+
+<!-- Container below the header -->
+<div class="container mt-20" style="width: 90%; height: 100vh;">
+
+  <!-- Row with two columns -->
+  <div class="container mt-4 d-flex justify-content-center" style="width: 90%; height: 500px;">
+    <div class="row w-100 rounded" style="background-color: #495057;box-shadow: 0 2px 5px rgba(223, 204, 130, 0.701); height: 100%;">
+
+      <!-- Left Side: Info + Form -->
+      <div class="col-md-6 p-4 d-flex flex-column justify-content-between">
+        <div>
+          <p class="mb-0" style="color: #DFD0B8; font-size: 1.2rem;">
+            <strong>Hey!</strong> { data.candidate_name } 
+          </p>
+          <p class="mb-2" style="color: #DFD0B8; font-size: 1rem;" >
+            this is your virtual interviewer
+          </p>
+          <p class="mb-1" style="font-size: 0.9rem;color: #DFD0B8;">
+            <strong>Organization Name:</strong> {{ data.organization_name or 'N/A' }}
+          </p>
+          <p class="mb-1" style="font-size: 0.9rem;color: #DFD0B8;">
+            <strong>Job Title:</strong> {{ data.job_title or 'N/A' }}
+          </p>
+          <p class="mb-3" style="font-size: 0.9rem;color: #DFD0B8;">
+            <strong>Email:</strong> {{ data.email or 'N/A' }}
+          </p>
+
+          <div class="mb-3 experience-fields" id="experienceFields" style="display: none;">
+  <label for="yearsExperience" class="form-label"><strong>Years of Experience</strong></label>
+  <input type="number" class="form-control" id="yearsExperience" min="1" max="30" value="3">
+</div>
+
+        </div>
+
+        <button type="button" id="startInterviewBtn" class="btn btn-sm mt-3"
+                style="background-color: #222831; color: #dfd0b8;">
+          <i class="fas fa-play"></i> Start Interview
+        </button>
+      </div>
+
+      <!-- Right Side: Camera Preview only -->
+      <div class="col-md-6 d-flex justify-content-center align-items-center p-0">
+        <video id="cameraFeed" class="camera-feed"
+               autoplay playsinline
+               style="width: 100%; height: 98%; border-radius: 10px; object-fit: cover;">
+        </video>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+        <div class="row interview-section">
+            <div class="col-md-8 offset-md-2">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3>Voice Interview</h3>
+                        <div id="progressText">Question <span id="currentQuestionNum">1</span> of <span id="totalQuestions"></span></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="interview-container">
+                            <div class="camera-container">
+                                <video id="activeCameraFeed" class="camera-feed" autoplay playsinline></video>
+                            </div>
+                            <div class="d-flex justify-content-center mb-3">
+                                <button id="micButton" class="mic-button">
+                                    <i class="fas fa-microphone"></i>
+                                </button>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-text" id="progressTextDisplay">0% Complete</div>
+                                <div class="progress">
+                                    <div id="progressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div id="interviewCompleteMessage" class="interview-complete-message">
+                                Interview completed! Thank you for participating.
+                                <button id="viewReportBtn" class="btn btn-outline-success btn-sm ms-3">
+                                    <i class="fas fa-chart-bar"></i> View Performance Report
+                                </button>
+                            </div>
+                        </div>
+                        <div id="answerPreview" class="answer-preview mt-3 p-2 bg-light rounded" style="min-height: 60px; font-style: italic;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    <!-- Report Modal -->
+    <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg report-modal">
+            <div class="modal-content">
+                <div class="modal-header report-header">
+                    <h5 class="modal-title" id="reportModalLabel">Interview Evaluation Report</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="report-content" id="reportContent">
+                        Loading report...
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="printReportBtn">
+                        <i class="fas fa-print"></i> Print Report
+                    </button>
+                    <button type="button" class="btn btn-success" id="downloadReportBtn">
+                        <i class="fas fa-download"></i> Download PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            let recognition;
+            let currentQuestionAudio;
+            let isRecording = false;
+            let interviewInProgress = false;
+            let autoStartRecording = true;
+            let mediaStream = null;
+            let totalSeconds = 1800; // 10 minutes for interview
+            let timerInterval;
+            let currentAnswer = ''; // Added to store accumulated answer
+            let pauseCheckInterval; // Added for pause detection
+            let lastActivityTime; // Added to track last activity
+            let submittingAnswer = false; // Flag to track when answer is being submitted
+            
+            // Initialize UI elements
+            $('#interviewCompleteMessage').hide();
+            $('#startNewInterviewBtn').hide();
+            
+            // Show/hide experience fields based on selection
+            $('input[name="experienceLevel"]').change(function() {
+                if ($('#experienced').is(':checked')) {
+                    $('#experienceFields').show();
+                } else {
+                    $('#experienceFields').hide();
+                }
+            });
+
+            function startTimer() {
+                clearInterval(timerInterval);
+                const timerDisplay = document.createElement('div');
+                timerDisplay.id = 'interviewTimer';
+                timerDisplay.style.position = 'fixed';
+                timerDisplay.style.top = '10px';
+                timerDisplay.style.right = '10px';
+                timerDisplay.style.backgroundColor = '#E52437';
+                timerDisplay.style.color = 'white';
+                timerDisplay.style.padding = '10px 15px';
+                timerDisplay.style.borderRadius = '8px';
+                timerDisplay.style.zIndex = 1000;
+                document.body.appendChild(timerDisplay);
+
+                function updateTimer() {
+                    const minutes = Math.floor(totalSeconds / 60);
+                    const seconds = totalSeconds % 60;
+                    timerDisplay.textContent = `⏱️ ${minutes}:${seconds < 10 ? '0' : ''}${seconds} remaining`;
+
+                    if (totalSeconds <= 0) {
+                        clearInterval(timerInterval);
+                        endInterviewDueToTimeout();
+                    }
+
+                    totalSeconds--;
+                }
+
+                updateTimer();
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+
+            function endInterviewDueToTimeout() {
+                $('#interviewCompleteMessage').show().text("Interview complete. Time is up!");
+                $('#startNewInterviewBtn').show();
+                $('.interview-section').hide();
+                clearInterval(timerInterval);
+                document.getElementById('interviewTimer')?.remove();
+
+                // Stop camera and recording
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                }
+            }
+
+            // Initialize camera
+            async function initCamera() {
+                try {
+                    if (mediaStream) {
+                        mediaStream.getTracks().forEach(track => track.stop());
+                    }
+                    
+                    mediaStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: {
+                            width: { ideal: 640 },
+                            height: { ideal: 480 },
+                            facingMode: "user"
+                        },
+                        audio: false
+                    });
+                    
+                    const cameraFeed = document.getElementById('cameraFeed');
+                    const activeCameraFeed = document.getElementById('activeCameraFeed');
+                    
+                    if (cameraFeed) cameraFeed.srcObject = mediaStream;
+                    if (activeCameraFeed) activeCameraFeed.srcObject = mediaStream;
+                    
+                    return true;
+                } catch (err) {
+                    console.error("Error accessing camera:", err);
+                    return false;
+                }
+            }
+            
+            // Start camera when page loads
+            initCamera();
+            
+            // Check for browser support
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('Your browser does not support speech recognition. Please use Chrome or Edge.');
+                $('#micButton').prop('disabled', true);
+            } else {
+                // Initialize speech recognition
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = true; // Set continuous to true for better capture
+                recognition.interimResults = true;
+                recognition.maxAlternatives = 1;
+                recognition.lang = 'en-US';
+                
+                // Configure longer listening with pause handling
+                recognition.onaudiostart = function() {
+                    isRecording = true;
+                    $('#micButton').addClass('recording');
+                    lastActivityTime = Date.now(); // Initialize last activity time
+                    startPauseDetection(); // Start pause detection
+                };
+                
+                recognition.onsoundend = function() {
+                    // Don't stop immediately on sound end
+                    // Instead, update last activity time for pause detection
+                    lastActivityTime = Date.now();
+                };
+                
+                recognition.onerror = function(event) {
+                    console.error('Speech recognition error', event.error);
+                    if (event.error !== 'no-speech') {
+                        isRecording = false;
+                        $('#micButton').removeClass('recording');
+                        stopPauseDetection();
+                    }
+                };
+                
+                recognition.onend = function() {
+                    // Only reset recording state, don't process answer yet
+                    isRecording = false;
+                    $('#micButton').removeClass('recording');
+                    
+                    // Restart recognition if interview is still in progress and dialog isn't showing
+                    if (interviewInProgress && !$('#pauseDialog').length && !submittingAnswer) {
+                        try {
+                            setTimeout(() => recognition.start(), 300);
+                        } catch(e) {
+                            console.error('Error restarting recognition:', e);
+                        }
+                    }
+                };
+                
+                recognition.onresult = function(event) {
+                    let interimTranscript = '';
+                    let finalTranscript = '';
+                    
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript;
+                        } else {
+                            interimTranscript += transcript;
+                        }
+                    }
+                    
+                    // Update last activity time when speech is detected
+                    lastActivityTime = Date.now();
+                    
+                    // Display interim results
+                    if (interimTranscript) {
+                        $('#answerPreview').text(currentAnswer + ' ' + interimTranscript);
+                    }
+                    
+                    // Accumulate final transcript
+                    if (finalTranscript) {
+                        currentAnswer += ' ' + finalTranscript;
+                        $('#answerPreview').text(currentAnswer);
+                    }
+                };
+            }
+            
+            $('#startInterviewBtn').click(async function () {
+                const role = $('#role').val();
+                const experienceLevel = $('input[name="experienceLevel"]:checked').val();
+                const yearsExperience = experienceLevel === 'experienced' ? $('#yearsExperience').val() : 0;
+
+                const resumeText = `{{ data.resume_text | safe }}`;
+                const jdText = `{{ data.jd_text | safe }}`;
+
+                // const resumeFile = document.getElementById('resume').files[0];
+                // const fileName = resumeFile.name; // e.g. "John_Doe_Resume.pdf"
+
+                // You can parse name from fileName string (split by underscores, spaces, etc.)
+                const candidateName =  `{{ data.jd_text | safe }}`;
+
+
+                console.log('Extracted Resume:', resumeText);
+                console.log('Extracted JD:', jdText);
+
+                $(this).html('<i class="fas fa-spinner fa-spin"></i> Starting...').prop('disabled', true);
+
+                $.ajax({
+                    url: '/start_interview',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        role: role,
+                        experience_level: experienceLevel,
+                        years_experience: yearsExperience,
+                        resume_text: resumeText,
+                        jd_text: jdText
+                        
+                    }),
+                    success: function (response) {
+                        if (response.status === 'started') {
+                            $('.setup-section').hide();
+                            $('.interview-section').show();
+                            $('#totalQuestions').text(response.total_questions);
+                            interviewInProgress = true;
+                            askQuestion();
+                        }
+                    },
+                    error: function (xhr) {
+                        alert('Error: ' + (xhr.responseJSON?.message || 'Failed to start interview'));
+                        $('#startInterviewBtn').html('<i class="fas fa-play"></i> Start Interview').prop('disabled', false);
+                    }
+                });
+            });
+
+            function askQuestion() {
+                if (!interviewInProgress || totalSeconds <= 0) return;
+
+                $.get('/get_question', function(response) {
+                    if (response.status === 'completed' || totalSeconds <= 0) {
+                        interviewComplete();  // still call this to clean up
+                    } else if (response.status === 'success') {
+                        $('#currentQuestionNum').text(response.question_number);
+                        updateProgress(response.question_number - 1, response.total_questions);
+
+                        // Play question and record answer
+                        playAudio(response.audio, function() {
+                            if (autoStartRecording) startRecording();
+                        });
+                    }
+                }).fail(function(xhr) {
+                    console.error('Error getting question:', xhr.responseText);
+                });
+            }
+
+
+
+
+
+
+            function startRecording() {
+                if (!isRecording && interviewInProgress) {
+                    try {
+                        // currentAnswer = ''; // Reset the current answer
+                        // $('#answerPreview').text('');
+                        recognition.start();
+                    } catch(e) {
+                        console.error('Error starting recognition:', e);
+                    }
+                }
+            }
+            
+         
+
+       function processAnswer(answer) {
+    if (!interviewInProgress) return;
+    
+    // Stop pause detection when processing answer
+    stopPauseDetection();
+    
+    // Capture frame for visual analysis
+    const video = document.getElementById('activeCameraFeed');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const frameData = canvas.toDataURL('image/jpeg');
+    
+    $.ajax({
+        url: '/process_answer',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            answer: answer,
+            frame: frameData
+        }),
+        success: function(response) {
+            if (response.status === 'answer_processed') {
+                // Clear answer preview
+                $('#answerPreview').text('');
+                
+                // Update progress
+                updateProgress(response.current_question, response.total_questions);
+                // $('#currentQuestionNum').text(response.current_question + 1);
+                
+                if (response.interview_complete) {
+                    interviewComplete();
+                    
+                    // Automatically open the report PDF in a new tab
+                    const pdfFilename = response.report_pdf_path ? response.report_pdf_path.split('/').pop() : null;
+                    if (pdfFilename) {
+                        const downloadUrl = `/download_report/${encodeURIComponent(pdfFilename)}`;
+                        
+                        // Open PDF in new tab
+                        window.open(downloadUrl, '_blank');
+                        
+                        // Show download button with updated click handler
+                        $('#downloadReportBtn').show().off('click').on('click', function() {
+                            window.open(downloadUrl, '_blank');
+                        });
+                    }
+                } else {
+                    // Move directly to next question
+                    setTimeout(askQuestion, 1000);
+                }
+            }
+        },
+        error: function(xhr) {
+            alert('Error processing answer: ' + (xhr.responseJSON?.message || 'Unknown error'));
+        }
+    });
+}
+
+
+            function interviewComplete() {
+                interviewInProgress = false;
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                }
+                $('#interviewCompleteMessage').show();
+                $('#startNewInterviewBtn').show();
+            }
+            
+            function playAudio(base64Data, onEndedCallback) {
+                if (!base64Data) {
+                    if (onEndedCallback) onEndedCallback();
+                    return;
+                }
+                const audio = new Audio('data:audio/wav;base64,' + base64Data);
+                audio.play();
+                if (onEndedCallback) {
+                    audio.onended = onEndedCallback;
+                }
+            }
+            
+            // function updateProgress(current, total) {
+            //     const percent = Math.round((current / total) * 100);
+            //     $('#progressBar').css('width', percent + '%');
+            //     $('#progressTextDisplay').text(`${percent}% Complete`);
+            // }
+
+
+                function updateProgress(current, total) {
+    let displayCurr = current;
+    if (displayCurr > total) displayCurr = total;
+
+    const percent = Math.round((displayCurr / total) * 100);
+
+    $('#progressBar').css('width', `${percent}%`).attr('aria-valuenow', percent);
+    $('#progressTextDisplay').text(`${percent}% Complete`);
+    $('#currentQuestionNum').text(displayCurr);  
+}
+            
+
+
+
+            
+            $('#micButton').click(function() {
+                if (!interviewInProgress) return;
+                
+                if (isRecording) {
+                    // If recording, clicking mic will pause/resume
+                    if ($(this).hasClass('paused')) {
+                        // Resume recording
+                        $(this).removeClass('paused');
+                        $(this).find('i').removeClass('fa-microphone-slash').addClass('fa-microphone');
+                        try {
+                            recognition.start();
+                        } catch(e) {
+                            console.error('Error resuming recognition:', e);
+                        }
+                    } else {
+                        // Pause recording
+                        $(this).addClass('paused');
+                        $(this).find('i').removeClass('fa-microphone').addClass('fa-microphone-slash');
+                        recognition.stop();
+                    }
+                } else {
+                    // Start new recording
+                    startRecording();
+                }
+            });
+            
+            $('#startNewInterviewBtn').click(function() {
+                $.ajax({
+                    url: '/reset_interview',
+                    type: 'POST',
+                    success: function() {
+                        // Reset UI
+                        $('.interview-section').hide();
+                        $('.setup-section').show();
+                        $('#startInterviewBtn').html('<i class="fas fa-play"></i> Start Interview').prop('disabled', false);
+                        $('#interviewCompleteMessage').hide();
+                        $('#startNewInterviewBtn').hide();
+                        $('#progressBar').css('width', '0%');
+                        $('#progressTextDisplay').text('0% Complete');
+                        
+                        // Reset camera
+                        initCamera();
+                    },
+                    error: function(xhr) {
+                        alert('Error: ' + (xhr.responseJSON?.message || 'Failed to reset interview'));
+                    }
+                });
+            });
+            
+            $('#viewReportBtn').click(function() {
+                showInterviewReport();
+            });
+            
+            $('#printReportBtn').click(function() {
+                window.print();
+            });
+            
+            $('#downloadReportBtn').click(function() {
+                const { jsPDF } = window.jspdf;
+                const element = document.getElementById('reportContent');
+                
+                html2canvas(element, {
+                    scale: 2,
+                    logging: true,
+                    useCORS: true
+                }).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const imgWidth = 210; // A4 width in mm
+                    const pageHeight = 295; // A4 height in mm
+                    const imgHeight = canvas.height * imgWidth / canvas.width;
+                    let heightLeft = imgHeight;
+                    let position = 0;
+                    
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                    
+                    while (heightLeft >= 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+                    
+                    pdf.save('interview_report.pdf');
+                });
+            });
+            
+            function startPauseDetection() {
+                stopPauseDetection(); // Clear any existing interval
+                pauseCheckInterval = setInterval(checkForPause, 1000); // Check every second
+            }
+
+            function stopPauseDetection() {
+                if (pauseCheckInterval) {
+                    clearInterval(pauseCheckInterval);
+                    pauseCheckInterval = null;
+                }
+            }
+
+            function checkForPause() {
+                if (!isRecording || !interviewInProgress) return;
+                
+                const timeSinceActivity = Date.now() - lastActivityTime;
+                // If no activity for 5 seconds, ask if user is still there
+                if (timeSinceActivity > 5000 && !$('#pauseDialog').length) {
+                    stopPauseDetection(); // Stop checking temporarily
+                    
+                    // Stop recognition while showing dialog
+                    if (isRecording) {
+                        recognition.stop();
+                    }
+                    
+                    // Create dialog overlay with timer
+                    const dialogHtml = `
+                    <div id="pauseDialog" class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background-color: rgba(0,0,0,0.5); z-index: 9999;">
+                        <div class="bg-white p-4 rounded shadow" style="max-width: 400px;">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-question-circle text-warning me-2" style="font-size: 24px;"></i>
+                                <h5 class="mb-0">Are you still there?</h5>
+                            </div>
+                            <p>Would you like to continue with your answer or move to the next question?</p>
+                            <div class="progress mb-3">
+                                <div id="pauseDialogTimer" class="progress-bar bg-warning" role="progressbar" style="width: 100%"></div>
+                            </div>
+                            <div class="d-flex justify-content-end mt-3">
+                                <button id="continueAnswerBtn" class="btn btn-primary me-2">
+                                    <i class="fas fa-microphone me-1"></i> Continue Answer
+                                </button>
+                                <button id="nextQuestionBtn" class="btn btn-secondary">
+                                    <i class="fas fa-forward me-1"></i> Next Question
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+                    
+                    $('body').append(dialogHtml);
+                    
+                    // Animate timer
+                    let timeLeft = 10; // 10 seconds
+                    const timerInterval = setInterval(() => {
+                        timeLeft--;
+                        const percent = (timeLeft / 10) * 100;
+                        $('#pauseDialogTimer').css('width', percent + '%');
+                        if (timeLeft <= 0) {
+                            clearInterval(timerInterval);
+                        }
+                    }, 1000);
+                    
+                    // Handle button clicks
+                    // $('#continueAnswerBtn').click(function() {
+                    //     clearInterval(timerInterval);
+                    //     $('#pauseDialog').remove();
+                    //     // Restart speech recognition
+                    //     lastActivityTime = Date.now();
+                    //     startRecording();
+                    //     startPauseDetection(); // Restart pause detection
+                    // });
+
+                    $('#continueAnswerBtn').click(function() {
+    clearInterval(timerInterval);
+    $('#pauseDialog').remove();
+
+    // ✅ Save current preview before restarting recognition
+    const previewText = $('#answerPreview').text().trim();
+    if (previewText && !currentAnswer.includes(previewText)) {
+        currentAnswer = previewText; // or append if needed
+    }
+
+    lastActivityTime = Date.now();
+    startRecording();
+    startPauseDetection(); // resume pause detection
+});
+
+                    
+                    $('#nextQuestionBtn').click(function() {
+                        clearInterval(timerInterval);
+                        $('#pauseDialog').remove();
+                        // Submit whatever answer we have so far
+                        if (currentAnswer.trim()) {
+                            processAnswer(currentAnswer.trim());
+                            currentAnswer = '';
+                        } else {
+                            // If no answer, just move to next question
+                            askQuestion();
+                        }
+                    });
+                    
+                    // Auto-continue after 10 seconds if no response
+                    setTimeout(function() {
+                        if ($('#pauseDialog').length) {
+                            clearInterval(timerInterval);
+                            $('#nextQuestionBtn').click();
+                        }
+                    }, 10000);
+                }
+            }
+            
+            let reportModalOpen = false;
+            function showInterviewReport() {
+                if (reportModalOpen) return; // Don't open multiple reports
+                
+                reportModalOpen = true;
+                
+                // Show loading message first
+                $('#reportContent').html(`
+                    <div class="text-center p-5">
+                        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <h4>Generating Interview Report</h4>
+                        <p class="text-muted">Please wait while we analyze your interview responses...</p>
+                    </div>
+                `);
+                
+                // Show the modal immediately with loading state
+                var reportModal = new bootstrap.Modal(document.getElementById('reportModal'));
+                reportModal.show();
+                
+                // Then fetch the actual report
+                $.ajax({
+                    url: '/generate_report',
+                    type: 'GET',
+                    success: function(response) {
+                        if (response.status === "success") {
+                            // Display the formatted report
+                            $('#reportContent').html(response.report);
+                            
+                            // Add status badge
+                            const statusBadge = `<div class="report-info mb-4">
+                                <h4>Interview Summary</h4>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="final-decision decision-${response.status_class}">
+                                        ${response.status === "Selected" ? "✅ " : response.status === "On Hold" ? "⏳ " : "❌ "}
+                                        ${response.status}
+                                    </span>
+                                    <span class="badge ${getRatingBadgeClass(response.avg_rating)}">
+                                        Average Rating: ${response.avg_rating.toFixed(1)}/10
+                                    </span>
+                                    <span class="badge bg-secondary">
+                                        Duration: ${response.duration}
+                                    </span>
+                                </div>
+                            </div>`;
+                            
+                            $('#reportContent').prepend(statusBadge);
+                            
+                            // Play the voice feedback
+                            if (response.voice_audio) {
+                                playAudio(response.voice_audio);
+                            }
+                            
+                            // Reset flag when modal is hidden
+                            $('#reportModal').on('hidden.bs.modal', function () {
+                                reportModalOpen = false;
+                            });
+                        } else {
+                            $('#reportContent').html(`
+                                <div class="alert alert-danger">
+                                    <h4>Error Generating Report</h4>
+                                    <p>${response.message || 'Failed to generate report. Please try again.'}</p>
+                                </div>
+                            `);
+                            
+                            // Reset flag when modal is hidden
+                            $('#reportModal').on('hidden.bs.modal', function () {
+                                reportModalOpen = false;
+                            });
+                        }
+                    },
+                    error: function(xhr) {
+                        $('#reportContent').html(`
+                            <div class="alert alert-danger">
+                                <h4>Error Loading Report</h4>
+                                <p>${xhr.responseJSON?.message || 'Failed to load report. Please try again.'}</p>
+                            </div>
+                        `);
+                        
+                        // Reset flag when modal is hidden
+                        $('#reportModal').on('hidden.bs.modal', function () {
+                            reportModalOpen = false;
+                        });
+                    }
+                });
+            }
+            
+            function getRatingBadgeClass(rating) {
+                if (rating >= 7) return 'rating-excellent';
+                if (rating >= 5) return 'rating-good';
+                if (rating >= 3) return 'rating-average';
+                return 'rating-poor';
+            }
+        });
+    </script>
+    
+</body>
+</html> 
