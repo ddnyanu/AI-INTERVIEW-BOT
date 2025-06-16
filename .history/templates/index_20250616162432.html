@@ -510,7 +510,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
 
     <script>
-     $(document).ready(function() {
+       $(document).ready(function() {
     // Global variables
     let recognition;
     let isRecording = false;
@@ -519,45 +519,30 @@
     let totalSeconds = 1800; // 30 minutes
     let timerInterval;
     let currentAnswer = '';
+    let pauseCheckInterval;
+    let lastActivityTime;
 
     // Initialize UI
     $('.interview-section').hide();
     $('#interviewCompleteMessage').hide();
 
-    // Initialize camera - MODIFIED TO START IMMEDIATELY
+    // Initialize camera
     async function initCamera() {
         try {
-            if (mediaStream) {
-                mediaStream.getTracks().forEach(track => track.stop());
-            }
-            
             mediaStream = await navigator.mediaDevices.getUserMedia({ 
-                video: {
-                    width: { ideal: 640 },
-                    height: { ideal: 480 },
-                    facingMode: "user"
-                },
+                video: { width: 640, height: 480, facingMode: "user" },
                 audio: false
             });
-            
-            // Set camera feed for both preview and active camera
             $('#cameraFeed')[0].srcObject = mediaStream;
             $('#activeCameraFeed')[0].srcObject = mediaStream;
-            
             return true;
         } catch (err) {
             console.error("Camera error:", err);
-            $('#cameraFeed').hide();
-            $('#activeCameraFeed').hide();
-            $('.camera-placeholder').show();
             return false;
         }
     }
 
-    // Start camera immediately when page loads
-    initCamera();
-
-    // Start interview - UPDATED TO MAINTAIN CAMERA
+    // Start interview
     $('#startInterviewBtn').click(async function() {
         const role = $('#role').val();
         const numQuestions = $('#numQuestions').val();
@@ -566,14 +551,10 @@
 
         $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Starting...');
 
-        // Verify camera is still working
-        if (!mediaStream || mediaStream.getVideoTracks().length === 0) {
-            const cameraReady = await initCamera();
-            if (!cameraReady) {
-                alert("Camera access is required to continue");
-                $(this).prop('disabled', false).html('<i class="fas fa-play"></i> Start Interview');
-                return;
-            }
+        if (!await initCamera()) {
+            alert('Please enable camera access to continue');
+            $(this).prop('disabled', false).html('<i class="fas fa-play"></i> Start Interview');
+            return;
         }
 
         $.ajax({
@@ -603,8 +584,199 @@
         });
     });
 
-    // [Rest of your existing functions remain the same...]
-    // Timer functions, interview flow, speech recognition, etc.
+    // Timer functions
+    function startTimer() {
+        clearInterval(timerInterval);
+        const timerDisplay = $('#interviewTimer').length ? $('#interviewTimer') : $('<div id="interviewTimer">').appendTo('body');
+        
+        timerDisplay.css({
+            position: 'fixed',
+            top: '10px',
+            right: '10px',
+            backgroundColor: '#E52437',
+            color: 'white',
+            padding: '10px 15px',
+            borderRadius: '8px',
+            zIndex: 1000
+        });
+
+        function updateTimer() {
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            timerDisplay.text(`⏱️ ${minutes}:${seconds < 10 ? '0' : ''}${seconds} remaining`);
+
+            if (totalSeconds <= 0) endInterview();
+            totalSeconds--;
+        }
+
+        updateTimer();
+        timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    // Interview flow
+    function askQuestion() {
+        if (!interviewInProgress) return;
+
+        $.get('/get_question', function(response) {
+            if (response.status === 'completed') {
+                endInterview();
+            } else if (response.text) {
+                $('#currentQuestionNum').text(response.question_number);
+                updateProgress(response.question_number, response.total_questions);
+                addMessage('bot', response.text);
+                
+                if (response.audio) {
+                    playAudio(response.audio, startRecording);
+                } else {
+                    startRecording();
+                }
+            }
+        }).fail(function(xhr) {
+            console.error('Question error:', xhr.responseText);
+        });
+    }
+
+    function processAnswer(answer) {
+        if (!answer.trim()) return;
+
+        const video = $('#activeCameraFeed')[0];
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const frameData = canvas.toDataURL('image/jpeg');
+
+        $.ajax({
+            url: '/submit_answer',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ answer: answer, frame: frameData }),
+            success: function(response) {
+                if (response.interview_complete) {
+                    endInterview();
+                } else {
+                    askQuestion();
+                }
+                currentAnswer = '';
+                $('#answerPreview').text('');
+            },
+            error: function(xhr) {
+                alert('Error submitting answer');
+            }
+        });
+    }
+
+    function endInterview() {
+        interviewInProgress = false;
+        clearInterval(timerInterval);
+        $('#interviewTimer').remove();
+        $('#interviewCompleteMessage').show();
+        
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+        }
+        
+        generateReport();
+    }
+
+    // Speech recognition
+    function setupSpeechRecognition() {
+        if (!('webkitSpeechRecognition' in window)) {
+            $('#micButton').prop('disabled', true);
+            return;
+        }
+
+        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        recognition.onresult = (event) => {
+            let interim = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    currentAnswer += ' ' + transcript;
+                } else {
+                    interim += transcript;
+                }
+            }
+            $('#answerPreview').text(currentAnswer + interim);
+            lastActivityTime = Date.now();
+        };
+
+        recognition.onend = () => {
+            if (interviewInProgress && !$('#pauseDialog').length) {
+                setTimeout(() => recognition.start(), 300);
+            }
+        };
+    }
+
+    function startRecording() {
+        if (!isRecording && interviewInProgress) {
+            recognition.start();
+            $('#micButton').addClass('recording');
+            isRecording = true;
+            lastActivityTime = Date.now();
+        }
+    }
+
+    function stopRecording() {
+        if (isRecording) {
+            recognition.stop();
+            $('#micButton').removeClass('recording');
+            isRecording = false;
+        }
+    }
+
+    // UI helpers
+    function addMessage(speaker, text) {
+        const messageClass = speaker === 'bot' ? 'bot-message' : 'user-message';
+        const icon = speaker === 'bot' ? '<i class="fas fa-robot me-2"></i>' : '<i class="fas fa-user me-2"></i>';
+        
+        $('#conversationContainer').append(`
+            <div class="message ${messageClass} d-flex">
+                ${icon}
+                <div>${text.replace(/\n/g, '<br>')}</div>
+            </div>
+        `).scrollTop($('#conversationContainer')[0].scrollHeight);
+    }
+
+    function updateProgress(current, total) {
+        const percent = Math.round((current / total) * 100);
+        $('#progressBar').css('width', `${percent}%`);
+        $('#progressTextDisplay').text(`${percent}% Complete`);
+        $('#currentQuestionNum').text(current);
+        $('#totalQuestions').text(total);
+    }
+
+    function playAudio(base64Data, callback) {
+        if (!base64Data) return callback?.();
+        const audio = new Audio(`data:audio/wav;base64,${base64Data}`);
+        audio.play();
+        if (callback) audio.onended = callback;
+    }
+
+    // Event handlers
+    $('#micButton').click(function() {
+        if (!interviewInProgress) return;
+        isRecording ? stopRecording() : startRecording();
+    });
+
+    $('#submitAnswerBtn').click(function() {
+        processAnswer(currentAnswer || $('#answerPreview').text());
+    });
+
+    $('#endSessionBtn').click(function() {
+        if (confirm('End interview session?')) endInterview();
+    });
+
+    $('#viewReportBtn').click(showReport);
+    $('#startNewInterviewBtn').click(() => location.reload());
+
+    // Initialize
+    setupSpeechRecognition();
 });
     </script>
     
