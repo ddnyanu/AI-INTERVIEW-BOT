@@ -27,16 +27,15 @@
             justify-content: center;
         }
         .setup-container {
-            background-color: #222831;
+            background-color: #393e46;
             border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 2px 10px rgba(223, 204, 130, 0.701);
-            margin-top: 40px;
-            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(223, 204, 130, 0.701);
+            margin-top: 20px;
         }
         .interview-container {
             display: none;
-            background-color: #222831;
+            background-color: #393e46;
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 2px 5px rgba(223, 204, 130, 0.701);
@@ -45,13 +44,13 @@
         }
         .thankyou-container {
             display: none;
-            background-color: #222831;
+            background-color: #393e46;
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 2px 5px rgba(223, 204, 130, 0.701);
             margin-top: 20px;
             text-align: center;
-            height: 50vh;
+            height: 80vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -63,7 +62,7 @@
             height: 60vh;
             overflow-y: auto;
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 8px;
             margin-bottom: 15px;
         }
         .camera-feed {
@@ -71,12 +70,12 @@
             height: 65vh;
             object-fit: cover;
             border-radius: 12px;
-            box-shadow: 0 0 10px rgba(0,0,0,0);
+            box-shadow: 0 0 10px rgba(0,0,0,0.4);
         }
         #micButton {
             background-color: #222831;
             color: #DFD0B8;
-            padding: 15px 25px;
+            padding: 15px 30px;
             font-size: 1.25rem;
             border-radius: 50px;
             border: none;
@@ -93,14 +92,14 @@
         .bot-message {
             background-color: #3a4750;
             padding: 10px;
-            border-radius: 12px;
+            border-radius: 10px;
             margin-bottom: 10px;
             max-width: 75%;
         }
         .user-message {
             background-color: #4a6fa5;
             padding: 10px;
-            border-radius: 12px;
+            border-radius: 10px;
             margin-bottom: 10px;
             max-width: 75%;
             margin-left: auto;
@@ -256,7 +255,7 @@
                     <video id="activeCameraFeed" class="camera-feed" autoplay playsinline></video>
                     <div class="d-flex justify-content-between mt-3">
                         <button class="btn btn-danger" id="endSessionBtn">End Session</button>
-                        <!-- <button class="btn btn-secondary" id="continueBtn" disabled>Continue</button> -->
+                        <button class="btn btn-secondary" id="continueBtn" disabled>Continue</button>
                     </div>
                     <div class="progress-container">
                         <div class="progress-text" id="progressTextDisplay">0% Complete</div>
@@ -329,6 +328,7 @@
         let totalQuestions = 0;
         let currentQuestionNum = 0;
         let reportModalOpen = false;
+        let answerCount = 0; // Track number of answer attempts per question
 
         // Initialize UI
         $('#interviewSection').hide();
@@ -467,7 +467,8 @@
                 }
                 const displayText = currentAnswer.trim() + (interimTranscript ? ' ' + interimTranscript : '');
                 if (displayText) {
-                    addUserMessage(displayText);
+                    answerCount++;
+                    addUserMessage(displayText, answerCount);
                 }
             };
         }
@@ -519,6 +520,7 @@
                 } else if (response.status === 'success') {
                     currentQuestionNum = response.question_number;
                     currentAnswer = ''; // Reset for new question
+                    answerCount = 0; // Reset answer count for new question
                     updateProgress(currentQuestionNum - 1, totalQuestions);
                     addBotMessage(response.question);
                     playAudio(response.audio, function() {
@@ -570,6 +572,7 @@
                     submittingAnswer = false;
                     if (response.status === 'answer_processed') {
                         currentAnswer = '';
+                        answerCount = 0;
                         updateProgress(response.current_question, response.total_questions);
                         currentQuestionNum = response.current_question + 1;
 
@@ -632,6 +635,8 @@
                 if ($(this).hasClass('paused')) {
                     $(this).removeClass('paused');
                     $(this).find('i').removeClass('fa-microphone-slash').addClass('fa-microphone');
+                    currentAnswer = ''; // Start fresh for new attempt
+                    answerCount++;
                     try {
                         recognition.start();
                     } catch (e) {
@@ -643,6 +648,8 @@
                     recognition.stop();
                 }
             } else {
+                currentAnswer = ''; // Start fresh for new attempt
+                answerCount++;
                 startRecording();
             }
         });
@@ -757,6 +764,8 @@
                     clearInterval(timerInterval);
                     $('#pauseDialog').remove();
                     lastActivityTime = Date.now();
+                    currentAnswer = ''; // Start fresh for new attempt
+                    answerCount++;
                     startRecording();
                     startPauseDetection();
                 });
@@ -792,18 +801,13 @@
         }
 
         // Add user message
-        function addUserMessage(message) {
+        function addUserMessage(message, count) {
             const conversationBox = $('#conversationBox');
-            const existingMessage = conversationBox.find(`.user-message[data-question="${currentQuestionNum}"]`);
-            if (existingMessage.length) {
-                existingMessage.html(`<strong>You:</strong> ${message}`);
-            } else {
-                conversationBox.append(`
-                    <div class="user-message" data-question="${currentQuestionNum}">
-                        <strong>You:</strong> ${message}
-                    </div>
-                `);
-            }
+            conversationBox.append(`
+                <div class="user-message" data-question="${currentQuestionNum}" data-answer="${count}">
+                    <strong>You:</strong> ${message}
+                </div>
+            `);
             conversationBox.scrollTop(conversationBox[0].scrollHeight);
         }
 
