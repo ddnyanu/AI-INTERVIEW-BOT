@@ -1,0 +1,21 @@
+
+Interview Report for Candidate
+Role: 
+Experience Level: fresher
+Years of Experience: 0
+
+Interview Duration: 2m 38s
+Average Rating: 5.0/10
+Overall Performance: Low
+
+Conversation Transcript with Feedback:
+Q1: As you haven't provided a resume or work experience, let's discuss your educational background. What field of study did you pursue, and what motivated you to choose that particular area?
+Response: I am a software developer I have two years of experience with the language Java python  is mongodi be as a back end HTML CSS react
+Q2: What aspects of your educational background are you most proud of, and why?
+Response: I am done MCA that is the most proud of moment I think I have
+Q3: Were there any specific courses or projects that particularly sparked your interest and inspired you to pursue this career path?
+Response: during MCA I have done many projects inventory management and  medical system and currently I am doing interview bought
+Q4: Can you provide examples of projects where you utilized Java and Python, and what were the outcomes?
+Response: I have used Java and Python in my in different products to a project I use our inventory management where I have done a back and Java and in medical system I have used Python as a Bacon
+
+End of Report

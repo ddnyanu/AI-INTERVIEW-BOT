@@ -15,7 +15,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import requests
 
-app = Flask(__name__)
+app = Flask(_name_)
 DJANGO_API_URL = "https://ai-interview-bot-80aw.onrender.com/jobs/interview/" 
 
 
@@ -33,7 +33,7 @@ app.config['SESSION_COOKIE_NAME'] = 'session'
 # Set safe path for session file storage
 session_dir = os.path.join(os.getcwd(), 'flask_session_data')
 os.makedirs(session_dir, exist_ok=True)
-app.config['SESSION__fileDIR'] = session_dir
+app.config['SESSION_FILE_DIR'] = session_dir
 Session(app)
 
 
@@ -42,7 +42,7 @@ Session(app)
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(_name_)
 handler = RotatingFileHandler('interview_app.log', maxBytes=10000000, backupCount=5)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
@@ -1262,7 +1262,7 @@ def reset_interview():
 
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.abspath(_file_))
 
 
 from flask import send_from_directory
@@ -1381,7 +1381,7 @@ def logout():
 
 
 
-if __name__ == '__main__':
+if _name_ == '_main_':
     app.json_encoder = JSONEncoder
     logger.info("Starting Flask application")
     app.run(debug=True)

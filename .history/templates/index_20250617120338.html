@@ -14,7 +14,7 @@
         }
         .header {
             background-color: #495057;
-            color: #DFD0B8;
+            color: #dfd0b8;
             margin-bottom: 2rem;
             border-radius: 15px;
             padding: 1rem 2rem;
@@ -27,35 +27,20 @@
             justify-content: center;
         }
         .setup-container {
-            background-color: #222831;
+            background-color: #393e46;
             border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 2px 10px rgba(223, 204, 130, 0.701);
-            margin-top: 40px;
-            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(223, 204, 130, 0.701);
+            margin-top: 20px;
         }
         .interview-container {
-            display: none;
-            background-color: #222831;
+            display: none; /* Hidden by default */
+            background-color: #393e46;
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 2px 5px rgba(223, 204, 130, 0.701);
             margin-top: 20px;
             height: 80vh;
-        }
-        .thankyou-container {
-            display: none;
-            background-color: #222831;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 5px rgba(223, 204, 130, 0.701);
-            margin-top: 20px;
-            text-align: center;
-            height: 50vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
         }
         .conversation-box {
             background-color: #2c2f36;
@@ -63,7 +48,7 @@
             height: 60vh;
             overflow-y: auto;
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 8px;
             margin-bottom: 15px;
         }
         .camera-feed {
@@ -71,12 +56,12 @@
             height: 65vh;
             object-fit: cover;
             border-radius: 12px;
-            box-shadow: 0 0 10px rgba(0,0,0,0);
+            box-shadow: 0 0 10px rgba(0,0,0,0.4);
         }
         #micButton {
             background-color: #222831;
             color: #DFD0B8;
-            padding: 15px 25px;
+            padding: 15px 30px;
             font-size: 1.25rem;
             border-radius: 50px;
             border: none;
@@ -93,14 +78,14 @@
         .bot-message {
             background-color: #3a4750;
             padding: 10px;
-            border-radius: 12px;
+            border-radius: 10px;
             margin-bottom: 10px;
             max-width: 75%;
         }
         .user-message {
             background-color: #4a6fa5;
             padding: 10px;
-            border-radius: 12px;
+            border-radius: 10px;
             margin-bottom: 10px;
             max-width: 75%;
             margin-left: auto;
@@ -111,38 +96,26 @@
         .btn-primary {
             background-color: #222831;
             border-color: #393e46;
-            color: #DFD0B8;
         }
         .btn-primary:hover {
             background-color: #393e46;
             border-color: #222831;
-            color: #DFD0B8;
-        }
-        .btn-secondary {
-            background-color: #393e46;
-            border-color: #222831;
-            color: #DFD0B8;
-        }
-        .btn-secondary:hover {
-            background-color: #222831;
-            border-color: #393e46;
-            color: #DFD0B8;
         }
         .rating-excellent {
             background-color: #28a745;
-            color: #DFD0B8;
+            color: white;
         }
         .rating-good {
             background-color: #17a2b8;
-            color: #DFD0B8;
+            color: white;
         }
         .rating-average {
             background-color: #ffc107;
-            color: #222831;
+            color: black;
         }
         .rating-poor {
             background-color: #dc3545;
-            color: #DFD0B8;
+            color: white;
         }
         .decision-selected {
             color: #28a745;
@@ -157,36 +130,10 @@
             font-weight: bold;
         }
         .report-info {
-            background-color: #393e46;
-            color: #DFD0B8;
+            background-color: #f8f9fa;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
-        }
-        .modal-content {
-            background-color: #222831;
-            color: #DFD0B8;
-        }
-        .modal-header {
-            background-color: #495057;
-            color: #DFD0B8;
-            border-bottom: 1px solid #393e46;
-        }
-        .modal-body {
-            background-color: #222831;
-            color: #DFD0B8;
-        }
-        .modal-footer {
-            background-color: #222831;
-            border-top: 1px solid #393e46;
-        }
-        .btn-close-white {
-            filter: invert(1);
-        }
-        .pause-dialog {
-            background-color: #222831;
-            color: #DFD0B8;
-            border: 1px solid #393e46;
         }
     </style>
 </head>
@@ -224,6 +171,24 @@
                                 Please ensure you're prepared — your responses will help us evaluate your fit for this role.
                             </p>
 
+                            <!-- Experience Selection -->
+                            <div class="mt-4">
+                                <label class="form-label"><strong>Experience Level</strong></label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="experienceLevel" id="fresher" value="fresher" checked>
+                                    <label class="form-check-label" for="fresher">Fresher</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="experienceLevel" id="experienced" value="experienced">
+                                    <label class="form-check-label" for="experienced">Experienced</label>
+                                </div>
+                            </div>
+
+                            <div id="experienceFields" class="mt-3" style="display: none;">
+                                <label for="yearsExperience" class="form-label"><strong>Years of Experience</strong></label>
+                                <input type="number" class="form-control" id="yearsExperience" min="1" max="30" value="3">
+                            </div>
+
                             <button type="button" id="startInterviewBtn" class="btn btn-primary mt-3">
                                 <i class="fas fa-play"></i> Start Interview
                             </button>
@@ -256,7 +221,7 @@
                     <video id="activeCameraFeed" class="camera-feed" autoplay playsinline></video>
                     <div class="d-flex justify-content-between mt-3">
                         <button class="btn btn-danger" id="endSessionBtn">End Session</button>
-                        <!-- <button class="btn btn-secondary" id="continueBtn" disabled>Continue</button> -->
+                        <button class="btn btn-secondary" id="continueBtn" disabled>Continue</button>
                     </div>
                     <div class="progress-container">
                         <div class="progress-text" id="progressTextDisplay">0% Complete</div>
@@ -267,27 +232,13 @@
                 </div>
             </div>
         </div>
-
-        <!-- Thank You Section (Hidden by default) -->
-        <div class="thankyou-container" id="thankYouSection">
-            <h2 class="mb-4">Thank You!</h2>
-            <p class="mb-4" style="font-size: 1.2rem;">
-                Thank you, {{ data.candidate_name }}, for completing your interview with NEX AI.
-            </p>
-            <p class="mb-4" style="font-size: 1rem; color: #aaaaaa;">
-                Your responses have been recorded, and you will receive a detailed evaluation report shortly.
-            </p>
-            <button type="button" class="btn btn-primary" id="restartInterviewBtn">
-                <i class="fas fa-redo"></i> Start New Interview
-            </button>
-        </div>
     </div>
 
     <!-- Report Modal -->
     <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="reportModalLabel">Interview Evaluation Report</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -316,11 +267,12 @@
     <script>
     $(document).ready(function() {
         let recognition;
+        let currentQuestionAudio;
         let isRecording = false;
         let interviewInProgress = false;
         let autoStartRecording = true;
         let mediaStream = null;
-        let totalSeconds = 180; // 3 minutes for interview
+        let totalSeconds = 600; // 10 minutes for interview
         let timerInterval;
         let currentAnswer = "";
         let pauseCheckInterval;
@@ -332,7 +284,15 @@
 
         // Initialize UI
         $('#interviewSection').hide();
-        $('#thankYouSection').hide();
+
+        // Show/hide experience fields
+        $('input[name="experienceLevel"]').change(function() {
+            if ($('#experienced').is(':checked')) {
+                $('#experienceFields').show();
+            } else {
+                $('#experienceFields').hide();
+            }
+        });
 
         // Start timer
         function startTimer() {
@@ -462,12 +422,13 @@
 
                 lastActivityTime = Date.now();
 
+                if (interimTranscript) {
+                    addUserMessage(currentAnswer + ' ' + interimTranscript);
+                }
+
                 if (finalTranscript) {
                     currentAnswer += ' ' + finalTranscript;
-                }
-                const displayText = currentAnswer.trim() + (interimTranscript ? ' ' + interimTranscript : '');
-                if (displayText) {
-                    addUserMessage(displayText);
+                    addUserMessage(currentAnswer);
                 }
             };
         }
@@ -477,6 +438,8 @@
         // Start interview button click handler
         $('#startInterviewBtn').click(async function() {
             const role = "{{ data.job_title }}";
+            const experienceLevel = $('input[name="experienceLevel"]:checked').val();
+            const yearsExperience = experienceLevel === 'experienced' ? $('#yearsExperience').val() : 0;
             const resumeText = "{{ data.resume_text | safe }}";
             const jdText = "{{ data.jd_text | safe }}";
 
@@ -488,6 +451,8 @@
                 contentType: 'application/json',
                 data: JSON.stringify({
                     role: role,
+                    experience_level: experienceLevel,
+                    years_experience: yearsExperience,
                     resume_text: resumeText,
                     jd_text: jdText
                 }),
@@ -518,7 +483,6 @@
                     interviewComplete();
                 } else if (response.status === 'success') {
                     currentQuestionNum = response.question_number;
-                    currentAnswer = ''; // Reset for new question
                     updateProgress(currentQuestionNum - 1, totalQuestions);
                     addBotMessage(response.question);
                     playAudio(response.audio, function() {
@@ -535,6 +499,7 @@
         function startRecording() {
             if (!isRecording && interviewInProgress) {
                 try {
+                    currentAnswer = '';
                     recognition.start();
                 } catch (e) {
                     console.error("Error starting recognition:", e);
@@ -575,6 +540,15 @@
 
                         if (response.interview_complete) {
                             interviewComplete();
+
+                            const pdfFilename = response.report_pdf_path ? response.report_pdf_path.split('/').pop() : null;
+                            if (pdfFilename) {
+                                const downloadUrl = `/download_report/${encodeURIComponent(pdfFilename)}`;
+                                window.open(downloadUrl, '_blank');
+                                $('#downloadReportBtn').show().off('click').on('click', function() {
+                                    window.open(downloadUrl, '_blank');
+                                });
+                            }
                         } else {
                             setTimeout(askQuestion, 1000);
                         }
@@ -599,8 +573,6 @@
             stopPauseDetection();
             clearInterval(timerInterval);
             document.getElementById('interviewTimer')?.remove();
-            $('#interviewSection').hide();
-            $('#thankYouSection').show();
             showInterviewReport();
         }
 
@@ -619,7 +591,7 @@
 
         // Update progress
         function updateProgress(current, total) {
-            const percent = Math.round((current / total) * 100);
+            const percent = Math.round(((current + 1) / total) * 100);
             $('#progressBar').css('width', percent + '%');
             $('#progressTextDisplay').text(`${percent}% Complete`);
         }
@@ -664,6 +636,12 @@
                     url: '/reset_interview',
                     type: 'POST',
                     success: function() {
+                        $('.interview-section').hide();
+                        $('.setup-section').show();
+                        $('#startInterviewBtn').html('<i class="fas fa-play"></i> Start Interview').prop('disabled', false);
+                        $('#progressBar').css('width', '0%');
+                        $('#progressTextDisplay').text('0% Complete');
+                        initCamera();
                         interviewComplete();
                     },
                     error: function(xhr) {
@@ -671,26 +649,6 @@
                     }
                 });
             }
-        });
-
-        // Restart interview button click handler
-        $('#restartInterviewBtn').click(function() {
-            $.ajax({
-                url: '/reset_interview',
-                type: 'POST',
-                success: function() {
-                    $('#thankYouSection').hide();
-                    $('.setup-section').show();
-                    $('#startInterviewBtn').html('<i class="fas fa-play"></i> Start Interview').prop('disabled', false);
-                    $('#progressBar').css('width', '0%');
-                    $('#progressTextDisplay').text('0% Complete');
-                    $('#conversationBox').empty();
-                    initCamera();
-                },
-                error: function(xhr) {
-                    alert('Error: ' + (xhr.responseJSON?.message || 'Failed to reset interview'));
-                }
-            });
         });
 
         // Start pause detection
@@ -720,14 +678,14 @@
 
                 const dialogHtml = `
                     <div id="pauseDialog" class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background-color: rgba(0,0,0,0.5); z-index: 9999;">
-                        <div class="pause-dialog p-4 rounded shadow" style="max-width: 400px;">
+                        <div class="bg-white p-4 rounded shadow" style="max-width: 400px;">
                             <div class="d-flex align-items-center mb-3">
                                 <i class="fas fa-question-circle text-warning me-2" style="font-size: 24px;"></i>
                                 <h5 class="mb-0">Are you still there?</h5>
                             </div>
                             <p>Would you like to continue with your answer or move to the next question?</p>
                             <div class="progress mb-3">
-                                <div id="pauseProgress" class="progress-bar bg-warning" role="progressbar" style="width: 100%"></div>
+                                <div id="pauseDialogTimer" class="progress-bar bg-warning" role="progressbar" style="width: 100%"></div>
                             </div>
                             <div class="d-flex justify-content-end mt-3">
                                 <button id="continueAnswerBtn" class="btn btn-primary me-2">
@@ -746,16 +704,19 @@
                 const timerInterval = setInterval(() => {
                     timeLeft--;
                     const percent = (timeLeft / 10) * 100;
-                    $('#pauseProgress').css('width', percent + '%');
+                    $('#pauseDialogTimer').css('width', percent + '%');
                     if (timeLeft <= 0) {
                         clearInterval(timerInterval);
-                        $('#nextQuestionBtn').click();
                     }
                 }, 1000);
 
                 $('#continueAnswerBtn').click(function() {
                     clearInterval(timerInterval);
                     $('#pauseDialog').remove();
+                    const previewText = $('#conversationBox .user-message:last').text().trim().replace('You: ', '');
+                    if (previewText && !currentAnswer.includes(previewText)) {
+                        currentAnswer = previewText;
+                    }
                     lastActivityTime = Date.now();
                     startRecording();
                     startPauseDetection();
@@ -784,8 +745,8 @@
         function addBotMessage(message) {
             const conversationBox = $('#conversationBox');
             conversationBox.append(`
-                <div class="bot-message" data-question="${currentQuestionNum}">
-                    <strong>Bot:</strong> ${message}
+                <div class="bot-message">
+                    <strong>AI:</strong> ${message}
                 </div>
             `);
             conversationBox.scrollTop(conversationBox[0].scrollHeight);
@@ -794,12 +755,12 @@
         // Add user message
         function addUserMessage(message) {
             const conversationBox = $('#conversationBox');
-            const existingMessage = conversationBox.find(`.user-message[data-question="${currentQuestionNum}"]`);
-            if (existingMessage.length) {
-                existingMessage.html(`<strong>You:</strong> ${message}`);
+            const lastUserMessage = conversationBox.find('.user-message:last');
+            if (lastUserMessage.length) {
+                lastUserMessage.text(`You: ${message}`);
             } else {
                 conversationBox.append(`
-                    <div class="user-message" data-question="${currentQuestionNum}">
+                    <div class="user-message">
                         <strong>You:</strong> ${message}
                     </div>
                 `);
@@ -817,7 +778,7 @@
                     <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
                         <span class="visually-hidden">Loading...</span>
                     </div>
-                    <h4>Generating Report</h4>
+                    <h4>Generating Interview Report</h4>
                     <p class="text-muted">Please wait while we analyze your interview responses...</p>
                 </div>
             `);

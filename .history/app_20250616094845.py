@@ -14,11 +14,48 @@ import json
 import logging
 from logging.handlers import RotatingFileHandler
 import requests
+from xhtml2pdf import pisa
+from io import BytesIO
+
+
+def html_to_pdf(html_content):
+    result = BytesIO()
+    pisa_status = pisa.CreatePDF(html_content, dest=result)
+    if pisa_status.err:
+        return None
+    return result.getvalue()
+
+
+
+
 
 app = Flask(__name__)
-DJANGO_API_URL = "https://ai-interview-bot-80aw.onrender.com/jobs/interview/" 
+DJANGO_API_URL = "https://ibot-backend.onrender.com/jobs/interview/" 
 
 
+# @app.route('/jobs/interview/<token>/')
+# def interview(token):
+#     try:
+#         # Call your Django API to get interview data
+#         response = requests.get(f"{DJANGO_API_URL}{token}/")
+#         print(f"🔍 Requesting interview data from: {DJANGO_API_URL}{token}/")
+
+#         if response.status_code == 200:
+#             data = response.json()
+#             print("✅ Data received from Django:", data)  # Debug print
+#             jd_text = data.get('jd_text', '')
+#             resume_text = data.get('resume_text', '')
+
+#             session['jd_text'] = jd_text
+#             session['resume_text'] = resume_text
+
+
+#             return render_template("index.html", data=data)
+#         else:
+#             return render_template("error.html", message="Invalid or expired interview link."), 404
+#     except Exception as e:
+#         print("❌ Error while contacting Django:", str(e))
+#         return render_template("error.html", message="Server error while retrieving interview data."), 500
 
 
 
@@ -33,7 +70,7 @@ app.config['SESSION_COOKIE_NAME'] = 'session'
 # Set safe path for session file storage
 session_dir = os.path.join(os.getcwd(), 'flask_session_data')
 os.makedirs(session_dir, exist_ok=True)
-app.config['SESSION__fileDIR'] = session_dir
+app.config['SESSION_FILE_DIR'] = session_dir
 Session(app)
 
 
@@ -57,7 +94,7 @@ co = cohere.Client(cohere_api_key)
 # Configuration
 MAX_FRAME_SIZE = 500
 FRAME_CAPTURE_INTERVAL = 5
-MAX_RECORDING_DURATION = 520
+MAX_RECORDING_DURATION = 1800    # 30 minutes
 PAUSE_THRESHOLD = 40
 FOLLOW_UP_PROBABILITY = 0.8
 MIN_FOLLOW_UPS = 2
@@ -139,54 +176,66 @@ def before_request():
     session.permanent = True
 
 
-
-
+username_extrnal=""
+organization_name_extrnal=""
 
 @app.route('/jobs/interview/<token>/')
 def interview(token):
     try:
-        response = requests.get(f"{DJANGO_API_URL}{token}/",timeout=5)
-        print(f"🔍 Requesting interview data from: {DJANGO_API_URL}{token}/")
-        print("🌐 Response status:", response.status_code)
-        logger.debug(response.text)  # Log the response text for debugging
+        # Step 1: Get interview data from Django using token
+        interview_response = requests.get(f"{DJANGO_API_URL}{token}/", timeout=30)
+        logging.debug(f"Requesting interview data from: {DJANGO_API_URL}{token}/")
+        logging.debug("Interview response status: %s", interview_response.status_code)
 
-        if response.status_code == 200:
-            data = response.json()
-          
-            logger.debug("✅ Data received from Django:", data)
+        if interview_response.status_code == 200:
+            interview_data = interview_response.json()
+            match_id = interview_data.get('id')  # Get ID to use for resume+jd
+            session['id'] = match_id
 
-            session['id'] = data.get('id')
-            logger.debug(f"Session ID set: {session['id']}")
-            # session['resume_text'] = data.get('resume_text')
-            # session['phone_number'] = data.get('phone_number')
+            # Step 2: Get Resume & JD data using ID
+            resume_jd_url = f"https://ibot-backend.onrender.com/jobs/resume-jd-by-id/{match_id}/"
+            resume_jd_response = requests.get(resume_jd_url, timeout=30)
 
-            # logger.debug("🔍 JD Snippet:", (session.get('jd_text') or '')[:300])
-            # logger.debug("🔍 Resume Snippet:", (session.get('resume_text') or '')[:300])
+            if resume_jd_response.status_code == 200:
+                resume_jd_data = resume_jd_response.json()
 
-            return render_template("index.html", data=data)
+                # ✅ Store Resume & JD info in Flask session
+                session['resume_text'] = resume_jd_data.get('resume_text')
+                session['jd_text'] = resume_jd_data.get('jd_text')
+                session['organization_name'] = resume_jd_data.get('organization_name')
+                session['job_title'] = resume_jd_data.get('job_title')
+                session['email'] = resume_jd_data.get('email')
+                session['candidate_name'] = resume_jd_data.get('candidate_name')
+                username_extrnal = resume_jd_data.get('candidate_name', 'Anonymous')
+                organization_name_extrnal = resume_jd_data.get('organization_name', 'Unknown')
 
-        elif response.status_code == 403:
+                logging.debug("Stored Resume & JD in session: %s", session)
+
+                # Optionally combine all data for template
+                full_data = {**interview_data, **resume_jd_data}
+
+
+                return render_template("index.html", data=full_data)
+            else:
+                logging.warning("Resume+JD not found or error.")
+                return render_template("error.html", message="❌ Unable to fetch resume and JD."), 500
+
+        elif interview_response.status_code == 403:
             return render_template("error.html", message="✅ Interview already completed."), 403
-        elif response.status_code == 404:
+        elif interview_response.status_code == 404:
             return render_template("error.html", message="❌ Invalid or expired interview link."), 404
-        elif response.status_code == 410:
+        elif interview_response.status_code == 410:
             return render_template("error.html", message="❌ Interview link has expired."), 410
         else:
-            print("❌ Unexpected status code:", response.status_code)
-            print("❌ Response content:", response.text)
-            return render_template("error.html", message="Something went wrong. Please try again later."), 500
+            return render_template("error.html", message="❌ Unexpected error. Please try again later."), 500
 
     except Exception as e:
-        print("❌ Exception while contacting Django:", str(e))
+        logging.error("Exception in interview(): %s", str(e))
         return render_template("error.html", message="⚠ Server error while retrieving interview data."), 500
-    
 
 
 
-
-
-
-def generate_initial_questions(role, experience_level, years_experience,jd_text,resume_text):
+def generate_initial_questions(role, experience_level, years_experience,jd_text="",resume_text=""):
     
    
     logger.debug("Starting question generation with resume and JD analysis")
@@ -204,30 +253,30 @@ def generate_initial_questions(role, experience_level, years_experience,jd_text,
     prompt = f"""
 You are an intelligent AI interviewer conducting a real-time voice-based interview.
 
-The candidate has applied for the position of *{role}*
-Experience Level: *{experience_level}, Years of Experience: **{years_experience}*
+The candidate has applied for the position of **{role}**
+Experience Level: **{experience_level}**, Years of Experience: **{years_experience}**
 
 ---  
- *Resume Extract (Use this for 5 questions)*  
+ **Resume Extract (Use this for 5 questions)**  
 {resume_text[:1500] if resume_text else "Not provided"}
 
- *Job Description Extract (Use this for 5 questions)*  
+ **Job Description Extract (Use this for 5 questions)**  
 {jd_text[:1500] if jd_text else "Not provided"}
 
- *Experience Info*  
+ **Experience Info**  
 Level: {experience_level}  
 Years: {years_experience}
 
- *Target Role*  
+ **Target Role**  
 {role}
 ---
 
- Your task is to generate *20 smart, unique, and personalized questions* broken down as follows:
+ Your task is to generate **15 smart, unique, and personalized questions** broken down as follows:
 
-1. *5 technical questions from Resume*
-2. *5 technical questions from Job Description*
-3. *5 questions based on Experience*
-4. *5 questions based on Role responsibilities & expectations*
+1. **5 technical questions from Resume**
+2. **5 technical questions from Job Description**
+3. **2 questions based on Experience**
+4. **3 questions based on Role responsibilities & expectations**
 
  Guidelines:
 - Each main question must be followed by 2 intelligent follow-ups (use chain of thought)
@@ -242,7 +291,7 @@ Follow-ups: [follow-up 1] | [follow-up 2]
 
 ONLY use the above format. Do NOT include labels like "Section", "Greeting".
 """
-     
+
 
 
 
@@ -251,7 +300,7 @@ ONLY use the above format. Do NOT include labels like "Section", "Greeting".
         response = co.generate(
             model="command-r-plus",
             prompt=prompt,
-            temperature=0.7,
+            temperature=0.5,
             max_tokens=2000
         )
         script = response.generations[0].text
@@ -266,6 +315,8 @@ ONLY use the above format. Do NOT include labels like "Section", "Greeting".
 
 
         questions = []
+        count = len(questions)
+        logger.debug(f"Initial question count---------------: {count}")
         question_topics = []
         current_block = {}
 
@@ -298,9 +349,9 @@ ONLY use the above format. Do NOT include labels like "Section", "Greeting".
 
         # Trim the list based on experience level
         if experience_level == "fresher":
-            questions = questions[:8]  # Greeting, 2 tech, 1 behavioral
+            questions = questions[:10]  # Greeting, 2 tech, 1 behavioral
         else:
-            questions = questions[:8]  # Greeting, 2 tech, 1 behavioral, 1 achievement
+            questions = questions[:10]  # Greeting, 2 tech, 1 behavioral, 1 achievement
 
         logger.debug(f"Generated {len(questions)} questions with {len(question_topics)} topics")
         return questions, question_topics[:len(questions)]
@@ -410,7 +461,7 @@ def generate_dynamic_follow_up(conversation_history, current_topic):
         Return ONLY the question, nothing else.
         """
         
-        logger.debug("Sending prompt to cohere for dynamic follow-up")
+        logger.debug("Sending prompt to OpenAI for dynamic follow-up")
         response = co.generate(
         model="command-r-plus",  # Adjust model as necessary
         prompt=prompt,
@@ -424,6 +475,7 @@ def generate_dynamic_follow_up(conversation_history, current_topic):
     except Exception as e:
         logger.error(f"Error generating dynamic follow-up: {str(e)}", exc_info=True)
         return None
+
 
 def generate_encouragement_prompt(conversation_history):
     logger.debug("Generating encouragement prompt for paused candidate")
@@ -448,7 +500,7 @@ def generate_encouragement_prompt(conversation_history):
             model="command-r-plus",  # Adjust the model to the one you want to use in Cohere
             prompt=prompt,
             max_tokens=300,
-            temperature=0.5
+            temperature=0.3
         )
 
 
@@ -471,13 +523,7 @@ def text_to_speech(text):
         
         tts.save(temp_filename)
         
-        # Commenting out pydub-related code
-        # audio = AudioSegment.from_mp3(temp_filename)
-        # wav_filename = temp_filename.replace('.mp3', '.wav')
-        # audio.export(wav_filename, format="wav")
-        
-        # with open(wav_filename, 'rb') as f:
-        #     audio_data = f.read()
+    
         
         # Read mp3 file directly instead
         with open(temp_filename, 'rb') as f:
@@ -510,7 +556,7 @@ def analyze_visual_response(frame_base64, conversation_context):
             model="command-r-plus",  # Replace with the appropriate Cohere model ID
             prompt=prompt,
             max_tokens=200,
-            temperature=0.2
+            temperature=0.5
         )
         
         feedback = response.generations[0].text.strip()  # Access the generated feedback from Cohere
@@ -531,18 +577,18 @@ def evaluate_response(answer, question, role, experience_level, visual_feedback=
         logger.debug("Short but acceptable answer, returning 4")
         return 4
 
-    # Construct the evaluation prompt for Cohere
+    # # Construct the evaluation prompt for Cohere
     # rating_prompt = f"""
     # Analyze this interview response for a {role} position ({experience_level} candidate).
     # Question: "{question}"
     # Answer: "{answer}"
 
     # Provide ONLY a numeric rating from 1-10 based on:
-    # - Relevance to question (20%)
-    # - Depth of knowledge (30%)
-    # - Clarity of communication (20%)
-    # - Specific examples provided (20%)
-    # - Professionalism (10%)
+    # - Relevance to question (55%)
+    # - Depth of knowledge (20%)
+    # - Clarity of communication (10%)
+    # - Specific examples provided (5%)
+    # - Professionalism (20%)
     # """
     rating_prompt = f"""
 You are assessing an interview response for a {role} position from a {experience_level} candidate.
@@ -609,12 +655,15 @@ Only return the output in the following strict *JSON format*:
 """
 
 
+
+
+
     try:
         response = co.generate(
             model="command-r-plus",  # Replace with the appropriate Cohere model ID
             prompt=rating_prompt,
             max_tokens=100,
-            temperature=0.3
+            temperature=0.2
         )
         
         # Extract rating from Cohere's response
@@ -648,10 +697,10 @@ def generate_interview_report(interview_data):
         avg_rating = sum(interview_data['ratings']) / len(interview_data['ratings']) if interview_data['ratings'] else 0
         
         # Determine status based on average rating
-        if avg_rating >= 7:
+        if avg_rating >= 6:
             status = "Selected"
             status_class = "selected"
-        elif avg_rating >= 4 and avg_rating < 7:
+        elif avg_rating >= 3 and avg_rating < 6:
             status = "On Hold"
             status_class = "onhold"
         else:
@@ -662,114 +711,29 @@ def generate_interview_report(interview_data):
         conversation_history_text = "\n".join([f"{item['speaker']}: {item['text']}" for item in interview_data['conversation_history'] if 'speaker' in item])
         
         # Generate comprehensive report using Cohere
-        # report_prompt = f"""
-        # Analyze this interview transcript and generate a detailed report for a {interview_data['role']} position candidate.
-        
-        # Candidate Background:
-        # - Experience Level: {interview_data['experience_level']}
-        # - Years of Experience: {interview_data['years_experience']}
-        # - Interview Duration: {duration}
-        # - Average Rating: {avg_rating:.1f}/10
-        
-        # Interview Transcript:
-        # {conversation_history_text}
-        
-        # Please provide a comprehensive report with the following sections:
-        # 1. Interview Summary (brief overview)
-        # 2. Key Strengths (3 specific strengths with examples from answers)
-        # 3. Areas for Improvement (3 specific areas with actionable suggestions)
-        # 4. Overall Recommendation (Selected/On Hold/Rejected)
-        # 5. Voice Feedback Script (a concise 5-6 line summary in conversational tone)
-        
-        # Format the report in HTML with appropriate headings and styling.
-        # Include tables for strengths and improvements with two columns (Aspect, Evidence/Suggestion).
-        # """
         report_prompt = f"""
-You are an expert AI HR assistant responsible for generating professional interview evaluation reports.
-
-The following interview was conducted for the role of {interview_data['role']}.
-
-### Candidate Overview:
-- 🎓 Experience Level: {interview_data['experience_level']}
-- 🕒 Years of Experience: {interview_data['years_experience']}
-- ⏱ Interview Duration: {duration}
-- ⭐ Average Interviewer Rating: {avg_rating:.1f}/10
-
-### 📜 Interview Transcript:
-{conversation_history_text}
-
----
-
-## 🎯 Your Task:
-Generate a detailed interview evaluation report using the transcript and rating context.
-
-Format the output in clean HTML with semantic structure, using <h2>, <table>, and <div>.
-
-✅ Include the following 5 sections:
-
----
-
-### 1. <h2>Interview Summary</h2>
-- Provide a concise overview of how the interview went.
-- Mention how well the candidate communicated, handled technical questions, and overall impression.
-
----
-
-### 2. <h2>Key Strengths</h2>
-Show a table with 2 columns:
-- Aspect (e.g., Problem Solving, Communication, Domain Expertise)
-- Evidence from Responses (quote or summarize a relevant answer)
-
----
-
-### 3. <h2>Areas for Improvement</h2>
-Show a table with 2 columns:
-- Aspect to Improve (e.g., Confidence, Project Depth)
-- Suggestion or Evidence (recommend actionable feedback)
-
----
-
-### 4. <h2>Visual Analysis</h2>
-# Use Unicode/emoji-based pie-style visualizations for the following (each as a separate block):
-# - Interview Round Ratings (e.g., Round 1: 8/10 )
-# - Skill Balance Pie:
-#   - Technical Skills 🛠 — (e.g., ██████████ 80%)
-#   - Communication 🗣 — (e.g., ████████ 65%)
-#   - Behavioral Fit 🤝 — (e.g., █████████ 75%)
-
-# Use HTML <div> or <ul> for layout, no CSS or JS.
-   <h2>Visual Analysis</h2>
-
-<div style="text-align: center;">
-  <h4>Skill Distribution</h4>
-  <svg width="200" height="200" viewBox="0 0 32 32">
-    <circle r="16" cx="16" cy="16" fill="#eee" />
-    <!-- Technical 50% -->
-    <path d="M16 16 L16 0 A16 16 0 0 1 31.5 10 Z" fill="#4CAF50"></path>
-    <!-- Communication 30% -->
-    <path d="M16 16 L31.5 10 A16 16 0 0 1 25 28 Z" fill="#2196F3"></path>
-    <!-- Behavioral 20% -->
-    <path d="M16 16 L25 28 A16 16 0 0 1 16 0 Z" fill="#FFC107"></path>
-  </svg>
-  <div style="font-size: 14px; margin-top: 10px;">
-    <p><span style="color:#4CAF50;">●</span> Technical: 50%</p>
-    <p><span style="color:#2196F3;">●</span> Communication: 30%</p>
-    <p><span style="color:#FFC107;">●</span> Behavioral: 20%</p>
-  </div>
-</div>
----
-
-### 5. <h2>Overall Recommendation</h2>
-Clearly state whether the candidate is:
-- ✅ Selected
-- ⏳ On Hold
-- ❌ Rejected
-
-Also, explain why using just 2-3 crisp bullet points.
-
-Return the entire content as pure HTML.
-Do not add external CSS or scripts.
-"""
+        Analyze this interview transcript and generate a detailed report for a {interview_data['role']} position candidate.
+        
+        Candidate Background:
+        - Experience Level: {interview_data['experience_level']}
+        - Years of Experience: {interview_data['years_experience']}
+        - Interview Duration: {duration}
+        - Average Rating: {avg_rating:.1f}/10
+        
+        Interview Transcript:
+        {conversation_history_text}
+        
+        Please provide a comprehensive report with the following sections:
+        1. Interview Summary (brief overview)
+        2. Key Strengths (3 specific strengths with examples from answers)
+        3. Areas for Improvement (3 specific areas with actionable suggestions)
+        4. Overall Recommendation (Selected/On Hold/Rejected)
+        5. Voice Feedback Script (a concise 5-6 line summary in conversational tone)
+        
+        Format the report in HTML with appropriate headings and styling.
+        Include tables for strengths and improvements with two columns (Aspect, Evidence/Suggestion).
+        """
+        
         logger.debug("Sending report generation request to Cohere")
 
       # Send the report prompt to Cohere for report generation
@@ -777,11 +741,12 @@ Do not add external CSS or scripts.
             model="command-r-plus",  # Replace with the appropriate model for your task
             prompt=report_prompt,
             max_tokens=2000,
-            temperature=0.5
+            temperature=0.3
         )
         
         report_content = response.generations[0].text  # Access the generated report content from Cohere
         logger.debug("Received report content from Cohere")
+
         
         # Generate voice feedback from the report using Cohere
         voice_feedback_prompt = f"""
@@ -803,7 +768,7 @@ Do not add external CSS or scripts.
             model="command-r-plus",  # Replace with the appropriate model for your task
             prompt=voice_feedback_prompt,
             max_tokens=300,
-            temperature=0.5
+            temperature=0.3
         )
         
         voice_feedback = voice_response.generations[0].text.strip()  # Get the voice feedback text from Cohere
@@ -813,6 +778,7 @@ Do not add external CSS or scripts.
         logger.debug("Converting voice feedback to audio")
         voice_audio = text_to_speech(voice_feedback)
         
+        session['interview_data'] = interview_data  # Save updated interview data to session
         return {
             "status": "success",
             "report": report_content,
@@ -832,11 +798,18 @@ Do not add external CSS or scripts.
             "voice_feedback": "We encountered an error generating your feedback.",
             "voice_audio": None
         }
+
+
+
+
 class JSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (datetime, np.integer)):
             return str(obj)
         return json.JSONEncoder.default(self, obj)
+
+
+
 
 @app.route('/')
 def home():
@@ -845,7 +818,7 @@ def home():
     session['interview_data'] = init_interview_data()
         # Provide fallback if data not available
     data = {
-        "user_name": "Guest",
+        "candidate_name": "Guest",
         "email": "",
         "match_score": "",
         "jd_text": "",
@@ -875,7 +848,7 @@ def start_interview():
     logger.debug(f"Received resume text (first 300 chars): {resume_text[:300]}")
     logger.debug(f"Received JD text (first 300 chars): {jd_text[:300]}")
 
-    candidate_name = data.get('fileName', 'Candidate')  # match the key sent from JS
+    candidate_name = session.get('candidate_name', 'Anonymous')  # match the key sent from JS
     candidate_name = candidate_name.split('.')[0].replace('_', ' ').replace('-', ' ')
     print("Candidate Name:----------------------------------------------------------", candidate_name)
     
@@ -883,15 +856,25 @@ def start_interview():
     session['interview_data'] = init_interview_data()
     interview_data = session['interview_data']
     
-    # Assign interview parameters
-    interview_data['role'] = data.get('role', 'Software Engineer')
-    interview_data['experience_level'] = data.get('experience_level', 'fresher')
-    interview_data['years_experience'] = int(data.get('years_experience', 0))
-    interview_data['resume'] = resume_text
-    interview_data['jd'] = jd_text,
-    interview_data['candidate_name'] = candidate_name  
+    
+
+
+    interview_data['role'] = session.get('job_title', 'Software Engineer')
+    interview_data['experience_level'] = session.get('experience_level', 'fresher')
+    interview_data['years_experience'] = int(session.get('years_experience', 0))
+    interview_data['resume'] = session.get('resume_text')
+    interview_data['jd'] = session.get('jd_text')
+    interview_data['candidate_name'] = session.get('candidate_name', 'Anonymous')
+    interview_data['email'] = session.get('email')
+    interview_data['organization_name'] = session.get('organization_name')
+
+
+    # Timestamps
     interview_data['start_time'] = datetime.now(timezone.utc)
     interview_data['last_activity_time'] = datetime.now(timezone.utc)
+
+
+
 
     logger.debug(f"Interview parameters set - Role: {interview_data['role']}, "
                  f"Experience: {interview_data['experience_level']}, "
@@ -948,7 +931,7 @@ def get_question():
 
     # === Timer Logic (e.g., interview for 15 minutes max) ===
     elapsed_time = datetime.now(timezone.utc) - interview_data.get('start_time', datetime.now(timezone.utc))
-    max_duration = timedelta(minutes=20)  # Change as needed
+    max_duration = timedelta(minutes=30)  # Change as needed
     if elapsed_time > max_duration:
         logger.info("Interview duration exceeded.")
         return jsonify({"status": "time_exceeded", "message": "Interview time has ended."})
@@ -1051,7 +1034,7 @@ def parse_questions(raw):
 
     return questions, topics
 
-    
+ 
 
 @app.route('/process_answer', methods=['POST'])
 def process_answer():
@@ -1079,29 +1062,6 @@ def process_answer():
     interview_data['conversation_history'].append({"speaker": "user", "text": answer})
     save_conversation_to_file([{"speaker": "user", "text": answer}])
     interview_data['last_activity_time'] = datetime.now(timezone.utc)
-
-    
-     # Generate feedback for the answer (e.g., based on length or other criteria)
-    feedback_label = "Needs improvement"  # Example static feedback; replace with your evaluation logic
-    if len(answer) > 50:  # This is a basic feedback example
-        feedback_label = "Good answer"
-    
-    # Append the answer along with feedback
-    interview_data['conversation_history'].append({"speaker": "user", "text": answer, "feedback_label": feedback_label})
-    save_conversation_to_file([{"speaker": "user", "text": answer, "feedback_label": feedback_label}])
-    interview_data['last_activity_time'] = datetime.now(timezone.utc)
-    
-    # Convert feedback to speech
-    try:
-        logger.debug("Converting feedback to speech")
-        feedback_audio = text_to_speech(feedback_label)
-    except Exception as e:
-        logger.error(f"Text-to-speech failed: {str(e)}")
-        feedback_audio = None
-
-    # Store the feedback audio (optional, if you want to store it)
-    interview_data['conversation_history'][-1]['feedback_audio'] = feedback_audio
-    session['interview_data'] = interview_data
     
     visual_feedback = None
     current_time = datetime.now().timestamp()
@@ -1125,17 +1085,52 @@ def process_answer():
         except Exception as e:
             logger.error(f"Error processing frame: {str(e)}", exc_info=True)
     
+
+
+    # logger.debug("Evaluating response quality")
+    # rating = evaluate_response(
+    #     answer, 
+    #     current_question, 
+    #     interview_data['role'],
+    #     interview_data['experience_level'],
+    #     visual_feedback
+    # )
+    # interview_data['ratings'].append(rating)
+    # for entry in reversed(interview_data['conversation_history']):
+    #  if entry.get('speaker') == 'user' and 'evaluation' not in entry:
+    #     entry['evaluation'] = rating
+    #     break
+    # logger.debug(f"Response rated: {rating}/10")
+     
+    
     logger.debug("Evaluating response quality")
-    rating = evaluate_response(
+    rating_data = evaluate_response(
         answer, 
         current_question, 
         interview_data['role'],
         interview_data['experience_level'],
         visual_feedback
     )
+
+    # Extract final rating safely
+    try:
+        rating = float(rating_data.get("final_rating", 5))  # default to 5 if not present
+    except Exception as e:
+        logger.warning(f"Could not parse rating: {rating_data}, error: {e}, returning default rating")
+        rating = 5
+
     interview_data['ratings'].append(rating)
+
+    # Update latest user message with evaluation
+    for entry in reversed(interview_data['conversation_history']):
+        if entry.get('speaker') == 'user' and 'evaluation' not in entry:
+            entry['evaluation'] = rating
+            break
+
     logger.debug(f"Response rated: {rating}/10")
     
+
+
     if (interview_data['current_topic'] and len(answer.split()) > 15 and 
         interview_data['follow_up_count'] < MAX_FOLLOW_UPS):
         
@@ -1160,38 +1155,36 @@ def process_answer():
                 logger.debug(f"Added dynamic follow-up: {dynamic_follow_up}")
     
     # Check if interview is completed
-    interview_complete = interview_data['current_question'] >= len(interview_data['questions']) and not interview_data['follow_up_questions']
+    if not interview_data['follow_up_questions']:
+     interview_data['current_question'] += 1
 
-    if interview_complete:
-        logger.info("Interview complete, generating report")
-        user_report = generate_interview_report(interview_data)
-       
-
-         # Save admin report as plain text
-        admin_filepath, admin_filename = save_admin_report_txt(interview_data)
-        logger.info(f"Admin report saved: {admin_filepath}")
-
-        # Optionally, save this path in session or database to serve later in admin dashboard
-        
-        return jsonify({
-            "status": "interview_complete",
-            "message": "Interview complete, report generated and saved.",
-             "report_html": user_report.get('reports', ''),  # send HTML for user UI display
-        "admin_report_filename": admin_filename  # send PDF path for frontend/admin use
-        })
-    
+# Now check if interview is completed
+    interview_complete = interview_data['current_question'] >= len(interview_data['questions'])
     session['interview_data'] = interview_data
+    if interview_complete:
+     logger.info("Interview complete")
+     return jsonify({
+        "status": "interview_complete",
+        "message": "Interview complete. Report will be generated soon."
+    })
+    
+   
     
     return jsonify({
         "status": "answer_processed",
         "current_question": interview_data['current_question'],
         "total_questions": len(interview_data['questions']),
         "interview_complete": False,
-        "has_follow_up": len(interview_data['follow_up_questions']) > 0,
-        "feedback_audio": feedback_audio
+        "has_follow_up": len(interview_data['follow_up_questions']) > 0
     })
 
+
+
+
 from flask import send_from_directory
+
+
+
 
 @app.route('/check_pause', methods=['GET'])
 def check_pause():
@@ -1239,18 +1232,66 @@ def generate_report():
         session['interview_data'] = interview_data
         logger.debug("Set end time for interview")
 
-    # ✅ Generate admin report text file
-    try:
-        filepath, filename = save_admin_report_txt(interview_data)
-        logger.info(f"Admin report saved at {filepath}")
-    except Exception as e:
-        logger.error(f"Failed to save admin report: {e}")
+    interview_data["candidate_name"] = session.get("candidate_name", "Anonymous")
+    interview_data["organization_name"] = session.get("organization_name", "N/A")
+    interview_data["email"] = session.get("email", "Not Provided")
+    interview_data["job_title"] = session.get("job_title", "Unknown")
+    interview_data["resume_text"] = session.get("resume_text", "")
+    interview_data["jd_text"] = session.get("jd_text", "")
+
+    if not interview_data.get('end_time'):
+        interview_data['end_time'] = datetime.now(timezone.utc)
+
+    session['interview_data'] = interview_data 
 
     # ✅ Generate user report for frontend
     report = generate_interview_report(interview_data)
     logger.info("Interview report generated")
+    
+   
+    
+    # ✅ Step 2: Convert HTML report to PDF
+    html_report = report.get("report", "")
+    if report["status"] == "error":
+        return jsonify(report), 500
+    
+
+    pdf_binary = html_to_pdf(html_report)
+    if not pdf_binary:
+        logger.error("PDF generation failed")
+        return jsonify({"status": "error", "message": "PDF generation failed"}), 500
+    
+
+
+    # ✅ Step 3: Prepare JSON + Base64 PDF for Django
+    django_payload = {
+        "candidate_name": interview_data["candidate_name"],
+        "role": interview_data["job_title"],
+        "organization_name": interview_data["organization_name"],
+        "years_experience": interview_data["years_experience"],
+        "start_time": interview_data["start_time"].isoformat(),
+        "end_time": interview_data["end_time"].isoformat(),
+        "average_rating": report["avg_rating"],
+        "status": report["status_class"].capitalize(),  # "Selected", "On Hold", etc.
+        "report_text": html_report,
+        "pdf_file": base64.b64encode(pdf_binary).decode("utf-8")
+    }
+
+    # ✅ Step 4: Send to Django backend
+    try:
+        django_url = "https://ibot-backend.onrender.com/jobs/store-interview-report/"
+        django_response = requests.post(django_url, json=django_payload, headers={"Content-Type": "application/json"})
+
+        if django_response.status_code == 201:
+            logger.info("Report successfully sent to Django backend")
+        else:
+            logger.warning(f"Failed to save report in Django: {django_response.text}")
+
+    except Exception as e:
+        logger.error(f"Failed to send data to Django: {e}")
 
     return jsonify(report)
+
 
 
 @app.route('/reset_interview', methods=['POST'])
@@ -1260,117 +1301,121 @@ def reset_interview():
     session['interview_data'] = init_interview_data()
     return jsonify({"status": "success", "message": "Interview reset successfully"})
 
+from datetime import datetime, timezone
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-
-from flask import send_from_directory
-
-@app.route('/download_report/<filename>')
-def download_report(filename):
-    folder = 'reports'  # Make sure this matches your save folder
-    return send_from_directory(folder, filename, as_attachment=True)
-
-
-
-#     return report_txt
 
 def create_text_report_from_interview_data(interview_data):
-    candidate = interview_data.get('candidate_name', 'Unknown Candidate')
+    from datetime import datetime
+
+    # Extract key fields
     role = interview_data.get('role', 'Unknown Role')
-    exp_level = interview_data.get('experience_level', 'Unknown')
-    years = interview_data.get('years_experience', 0)
+    username_external = interview_data.get('candidate_name', 'Anonymous')
 
-    conv_history = interview_data.get("conversation_history", [])
-
-    # We expect pairs: question (bot), answer (user)
-    conversation_lines = []
-    i = 0
-    n = len(conv_history)
-    question_counter = 1
-    while i < n:
-        # Question from bot
-        q_item = conv_history[i]
-        if q_item.get("speaker", "").lower() == "bot":
-            question_text = q_item.get("text", "")
-            conversation_lines.append(f"Q{question_counter}: {question_text}")
-        else:
-            i += 1
-            continue
-
-        # Answer from user (should be next)
-        if i + 1 < n:
-            a_item = conv_history[i + 1]
-            if a_item.get("speaker", "").lower() == "user":
-                answer_text = a_item.get("text", "")
-                conversation_lines.append(f"Response: {answer_text}")
-
-                # Add feedback label if present
-                feedback_label = a_item.get("feedback_label")
-                if feedback_label:
-                    conversation_lines.append(f"  → Feedback: {feedback_label}")
-
-        question_counter += 1
-        i += 2  # Move to next Q&A pair
-
-    conversation_text = "\n".join(conversation_lines)
-    # Calculate average rating
-    ratings = interview_data.get('ratings', [])
+    # Filter only answered & evaluated questions
+    answered_questions = [
+        item for item in interview_data.get("conversation_history", [])
+        if item.get("answer") and item.get("evaluation") and isinstance(item.get("evaluation"), (int, float))
+    ]
+    ratings = [item["evaluation"] for item in answered_questions]
     avg_rating = sum(ratings) / len(ratings) if ratings else 0
 
-    # Determine performance level
-    if avg_rating >= 8:
-        performance = "High"
-    elif avg_rating >= 6:
-        performance = "Moderate"
-    elif avg_rating >= 4:
-        performance = "Low"
-    else:
-        performance = "Poor"
-
-    # Calculate duration
+    # Calculate interview duration
     duration = "N/A"
     if interview_data.get('start_time') and interview_data.get('end_time'):
-        duration_seconds = (interview_data['end_time'] - interview_data['start_time']).total_seconds()
+        start = interview_data['start_time']
+        end = interview_data['end_time']
+        if isinstance(start, str):
+            start = datetime.fromisoformat(start.replace("Z", "+00:00"))
+        if isinstance(end, str):
+            end = datetime.fromisoformat(end.replace("Z", "+00:00"))
+        duration_seconds = (end - start).total_seconds()
         minutes = int(duration_seconds // 60)
         seconds = int(duration_seconds % 60)
         duration = f"{minutes}m {seconds}s"
 
-    report_txt = f"""
-Interview Report for {candidate}
-Role: {role}
-Experience Level: {exp_level}
-Years of Experience: {years}
+    # Build transcript only for answered questions
+    transcript = ""
+    idx = 1
+    for item in interview_data.get("conversation_history", []):
+        question = item.get('question') or item.get('text', '') if item.get('speaker') == 'bot' else ''
+        answer = item.get('answer') or item.get('text', '') if item.get('speaker') == 'user' else ''
 
+        evaluation = item.get('evaluation', 'Not Evaluated')
+
+        if answer and answer.upper() != "N/A":
+            transcript += f"""
+Q{idx}: {question}
+A{idx}: {answer}
+✅ Evaluation: {evaluation}
+"""
+            idx += 1
+
+    # Determine candidate suitability
+    suitability = "suitable" if avg_rating >= 6 else "not suitable"
+
+    # Final formatted report
+    report_txt = f"""
+Interview Report for {username_external}
+
+Role: {role}
 Interview Duration: {duration}
 Average Rating: {avg_rating:.1f}/10
-Overall Performance: {performance}
 
-Conversation Transcript with Feedback:
-{conversation_text}
+Conversation Transcript:
+{transcript.strip()}
+
+Summary:
+The candidate answered {len(answered_questions)} questions.
+Based on the interview performance, the candidate is **{suitability}** for the role.
 
 End of Report
-"""
+""".strip()
+
     return report_txt
 
 
-def save_admin_report_txt(interview_data):
+import requests
+
+
+
+def save_report_to_django(interview_data):
+    # ✅ Create proper report text
     report_txt = create_text_report_from_interview_data(interview_data)
-    
-    candidate = interview_data.get("candidate_name", "unknown").replace(" ", "_")
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    filename = f"{candidate}interview_report{timestamp}.txt"
 
-    reports_folder = os.path.join(os.getcwd(), "reports")
-    if not os.path.exists(reports_folder):
-        os.makedirs(reports_folder)
+    # ✅ Safely calculate average rating from evaluated answers
+    answered_questions = [
+        item for item in interview_data.get("conversation_history", [])
+        if item.get("answer") and item.get("evaluation") and isinstance(item.get("evaluation"), (int, float))
+    ]
+    ratings = [item["evaluation"] for item in answered_questions]
+    average_rating = sum(ratings) / len(ratings) if ratings else 0
 
-    filepath = os.path.join(reports_folder, filename)
-    with open(filepath, "w", encoding="utf-8") as f:
-        f.write(report_txt)
+    # ✅ Extract other required fields
+    candidate_name = interview_data.get("candidate_name", "Anonymous")
+    organization_name = interview_data.get("organization_name", "N/A")
 
-    return filepath, filename
+    payload = {
+        "candidate_name": candidate_name,
+        "role": interview_data.get("role"),
+        "organization_name": organization_name,
+        "start_time": interview_data['start_time'].isoformat(),
+        "end_time": interview_data['end_time'].isoformat(),
+        "average_rating": average_rating,
+        "status": "Completed",
+        "report_text": report_txt
+    }
+
+    try:
+        response = requests.post("https://ibot-backend.onrender.com/jobs/store-interview-report/", json=payload)
+        print("✅ Django API response:", response.status_code, response.text)
+        return response.status_code, response.json()
+    except Exception as e:
+        print("❌ Error sending report to Django:", str(e))
+        return 500, {"error": str(e)}
+
+
+
 
 
 @app.route('/logout')
