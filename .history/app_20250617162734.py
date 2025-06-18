@@ -142,67 +142,127 @@ def before_request():
 
 
 
+# @app.route('/jobs/interview/<token>/')
+# def interview(token):
+#     try:
+#         response = requests.get(f"{DJANGO_API_URL}{token}/",timeout=30)
+#         print(f"🔍 Requesting interview data from: {DJANGO_API_URL}{token}/")
+#         print("🌐 Response status:", response.status_code)
+#         logger.debug(response.text)  # Log the response text for debugging
+
+#         # if response.status_code == 200:
+#         #     data = response.json()
+          
+#         #     logger.debug("✅ Data received from Django:", data)
+
+#         #     session['id'] = data.get('id')
+#         #     logger.debug(f"Session ID set: {session['id']}")
+#             # session['resume_text'] = data.get('resume_text')
+#             # session['phone_number'] = data.get('phone_number')
+
+#             # logger.debug("🔍 JD Snippet:", (session.get('jd_text') or '')[:300])
+#             # logger.debug("🔍 Resume Snippet:", (session.get('resume_text') or '')[:300])
+# # Step 2: Get Resume & JD data using ID
+#         resume_jd_url = f"https://ibot-backend.onrender.com/jobs/resume-jd-by-id/{match_id}/"
+#         resume_jd_response = requests.get(resume_jd_url, timeout=30)
+
+#         if resume_jd_response.status_code == 200:
+#                 resume_jd_data = resume_jd_response.json()
+
+#                 # ✅ Store Resume & JD info in Flask session
+#                 session['resume_text'] = resume_jd_data.get('resume_text')
+#                 session['jd_text'] = resume_jd_data.get('jd_text')
+#                 session['organization_name'] = resume_jd_data.get('organization_name')
+#                 session['job_title'] = resume_jd_data.get('job_title')
+#                 session['email'] = resume_jd_data.get('email')
+#                 session['candidate_name'] = resume_jd_data.get('candidate_name')
+#                 username_extrnal = resume_jd_data.get('candidate_name', 'Anonymous')
+#                 organization_name_extrnal = resume_jd_data.get('organization_name', 'Unknown')
+
+#                 logging.debug("Stored Resume & JD in session: %s", session)
+
+#                 # Optionally combine all data for template
+#                 full_data = {**interview_data, **resume_jd_data}
+#     return render_template("index.html", data=data)
+
+#         elif response.status_code == 403:
+#             return render_template("error.html", message="✅ Interview already completed."), 403
+#         elif response.status_code == 404:
+#             return render_template("error.html", message="❌ Invalid or expired interview link."), 404
+#         elif response.status_code == 410:
+#             return render_template("error.html", message="❌ Interview link has expired."), 410
+#         else:
+#             print("❌ Unexpected status code:", response.status_code)
+#             print("❌ Response content:", response.text)
+#             return render_template("error.html", message="Something went wrong. Please try again later."), 500
+
+#     except Exception as e:
+#         print("❌ Exception while contacting Django:", str(e))
+#         return render_template("error.html", message="⚠ Server error while retrieving interview data."), 500
+    
+
 @app.route('/jobs/interview/<token>/')
 def interview(token):
     try:
-        response = requests.get(f"{DJANGO_API_URL}{token}/",timeout=30)
-        print(f"🔍 Requesting interview data from: {DJANGO_API_URL}{token}/")
-        print("🌐 Response status:", response.status_code)
-        logger.debug(response.text)  # Log the response text for debugging
+        # Step 1: Get interview data from Django using token
+        interview_response = requests.get(f"{DJANGO_API_URL}{token}/", timeout=30)
+        logger.debug(f"🔍 Requesting interview data from: {DJANGO_API_URL}{token}/")
+        logger.debug("🌐 Interview response status: %s", interview_response.status_code)
+        logger.debug("Response content: %s", interview_response.text)
 
-        if response.status_code == 200:
-            data = response.json()
-          
-            logger.debug("✅ Data received from Django:", data)
-
-            match_id = data.get('id')
+        if interview_response.status_code == 200:
+            interview_data = interview_response.json()
+            match_id = interview_data.get('id')  # Get ID to use for resume+jd
             session['id'] = match_id
             logger.debug(f"Session ID set: {session['id']}")
+
+            # Step 2: Get Resume & JD data using ID
             resume_jd_url = f"https://ibot-backend.onrender.com/jobs/resume-jd-by-id/{match_id}/"
             resume_jd_response = requests.get(resume_jd_url, timeout=30)
+            logger.debug(f"🔍 Requesting resume/JD data from: {resume_jd_url}")
+            logger.debug("🌐 Resume/JD response status: %s", resume_jd_response.status_code)
+            logger.debug("Resume/JD response content: %s", resume_jd_response.text)
 
             if resume_jd_response.status_code == 200:
                 resume_jd_data = resume_jd_response.json()
 
-                # ✅ Store Resume & JD info in Flask session
-                session['resume_text'] = resume_jd_data.get('resume_text')
-                session['jd_text'] = resume_jd_data.get('jd_text')
-                session['organization_name'] = resume_jd_data.get('organization_name')
-                session['job_title'] = resume_jd_data.get('job_title')
-                session['email'] = resume_jd_data.get('email')
-                session['candidate_name'] = resume_jd_data.get('candidate_name')
-                username_extrnal = resume_jd_data.get('candidate_name', 'Anonymous')
-                organization_name_extrnal = resume_jd_data.get('organization_name', 'Unknown')
+                # Store Resume & JD info in Flask session
+                session['resume_text'] = resume_jd_data.get('resume_text', '')
+                session['jd_text'] = resume_jd_data.get('jd_text', '')
+                session['organization_name'] = resume_jd_data.get('organization_name', '')
+                session['job_title'] = resume_jd_data.get('job_title', '')
+                session['email'] = resume_jd_data.get('email', '')
+                session['candidate_name'] = resume_jd_data.get('candidate_name', '')
+                username_external = resume_jd_data.get('candidate_name', 'Anonymous')
+                organization_name_external = resume_jd_data.get('organization_name', 'Unknown')
 
-                logging.debug("Stored Resume & JD in session: %s", session)
+                logger.debug("✅ Stored Resume & JD in session: %s", session)
 
-                # Optionally combine all data for template
-                full_data = {**data, **resume_jd_data}
+                # Combine all data for template
+                full_data = {**interview_data, **resume_jd_data}
+                logger.debug("✅ Data sent to template: %s", full_data)
 
                 return render_template("index.html", data=full_data)
             else:
-                logging.warning("Resume+JD not found or error.")
-                return render_template("error.html", message="❌ Unable to fetch resume and JD."), 500
-      
-       
+                logger.warning("❌ Resume+JD request failed with status: %s", resume_jd_response.status_code)
+                return render_template("error.html", message="❌ Unable to fetch resume and JD data."), 500
 
-        elif response.status_code == 403:
+        elif interview_response.status_code == 403:
+            logger.warning("✅ Interview already completed (403)")
             return render_template("error.html", message="✅ Interview already completed."), 403
-        elif response.status_code == 404:
+        elif interview_response.status_code == 404:
+            logger.warning("❌ Invalid or expired interview link (404)")
             return render_template("error.html", message="❌ Invalid or expired interview link."), 404
-        elif response.status_code == 410:
+        elif interview_response.status_code == 410:
+            logger.warning("❌ Interview link expired (410)")
             return render_template("error.html", message="❌ Interview link has expired."), 410
         else:
-            print("❌ Unexpected status code:", response.status_code)
-            print("❌ Response content:", response.text)
-            return render_template("error.html", message="Something went wrong. Please try again later."), 500
+            logger.error("❌ Unexpected status code: %s", interview_response.status_code)
+            return render_template("error.html", message="❌ Unexpected error. Please try again later."), 500
 
     except Exception as e:
-        print("❌ Exception while contacting Django:", str(e))
-        return render_template("error.html", message="⚠ Server error while retrieving interview data."), 500
-
-    
-    
+        logger.error("❌ Exception in interview(): %s", str(e))
+        return render_template("error.html", message="⚠ Server error while retrieving interview data."), 500    
 
 
 

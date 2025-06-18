@@ -44,7 +44,7 @@
             height: 80vh;
         }
         .thankyou-container {
-            display: none; /* Ensure hidden by default */
+            display: none;
             background-color: #222831;
             border-radius: 10px;
             padding: 20px;
@@ -72,7 +72,7 @@
             object-fit: cover;
             border-radius: 12px;
             box-shadow: 0 0 10px rgba(0,0,0,0);
-            background-color: #000; /* Fallback for no video */
+            background-color: #000;
         }
         #micButton {
             background-color: #222831;
@@ -238,10 +238,10 @@
                         <div class="mt-4 p-3 rounded" style="background-color: #2c2f36;">
                             <h5 style="color: #DFD0B8; font-size: 1.1rem;">🔑 Key Features to Know Before Starting</h5>
                             <ul style="color: #DFD0B8; font-size: 0.95rem; padding-left: 1.2rem; margin-top: 10px;">
-                                 <li>Guides users through interview tasks</li>
-  <li>Provides real-time AI assistance</li>
-  <li>Generates performance reports</li>
-  <li>Interactive and easy-to-use interface</li>
+                                <li>AI that guides you through a series of tasks</li>
+                                <li>Give us your honest feedback</li>
+                                <li>You can ask the AI for help at any point</li>
+                                <li>Perform tasks</li>
                             </ul>
                         </div>
                         <button type="button" id="startInterviewBtn" class="btn btn-primary mt-3">
@@ -346,43 +346,92 @@
 
         // Initialize UI
         $('#interviewSection').hide();
-        $('#thankYouSection').hide(); // Ensure Thank You section is hidden
+        $('#thankYouSection').hide();
 
         // Initialize camera with enhanced error handling
         async function initCamera() {
-    try {
-        if (mediaStream) {
-            mediaStream.getTracks().forEach(track => track.stop());
-            console.log("Existing media stream stopped");
-        }
-        mediaStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
-                width: { ideal: 640 }, 
-                height: { ideal: 480 }, 
-                facingMode: "user" 
-            },
-            audio: false
-        });
-        const cameraFeed = document.getElementById('cameraFeed');
-        const activeCameraFeed = document.getElementById('activeCameraFeed');
-        if (cameraFeed) {
-            cameraFeed.srcObject = mediaStream;
-            console.log("Camera feed assigned to setup section");
-        }
-        if (activeCameraFeed) {
-            activeCameraFeed.srcObject = mediaStream;
-            console.log("Camera feed assigned to interview section");
-        }
-        console.log("Camera initialized successfully");
-        return true;
-    } catch (err) {
-        console.error("Error accessing camera:", err.name, err.message);
-        alert("Failed to access camera. Please ensure camera permissions are granted and try again.");
-        return false;
-    }
-}
+            try {
+                // Check secure context
+                if (!window.isSecureContext) {
+                    console.error("Non-secure context detected. Camera access requires HTTPS or localhost.");
+                    alert("Camera access is blocked because the page is not served over HTTPS or localhost. Please use a secure server.");
+                    return false;
+                }
 
-        // Call initCamera and log result
+                // Check browser support
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    console.error("getUserMedia not supported in this browser.");
+                    alert("Your browser does not support camera access. Please use Chrome, Edge, or Firefox.");
+                    return false;
+                }
+
+                // Stop existing stream
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                    console.log("Existing media stream stopped");
+                }
+
+                // Request camera access
+                mediaStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 640 }, 
+                        height: { ideal: 480 }, 
+                        facingMode: "user" 
+                    },
+                    audio: false
+                });
+
+                const cameraFeed = document.getElementById('cameraFeed');
+                const activeCameraFeed = document.getElementById('activeCameraFeed');
+
+                // Verify video elements
+                if (!cameraFeed || !activeCameraFeed) {
+                    console.error("Video elements not found:", { cameraFeed: !!cameraFeed, activeCameraFeed: !!activeCameraFeed });
+                    alert("Internal error: Video elements not found. Please refresh the page.");
+                    return false;
+                }
+
+                // Assign stream
+                cameraFeed.srcObject = mediaStream;
+                activeCameraFeed.srcObject = mediaStream;
+
+                // Verify video tracks
+                const videoTracks = mediaStream.getVideoTracks();
+                if (videoTracks.length === 0) {
+                    console.error("No video tracks in stream.");
+                    alert("No video feed available. Please check your camera.");
+                    return false;
+                }
+
+                console.log("Camera initialized with track:", videoTracks[0].label);
+                cameraFeed.onloadedmetadata = () => {
+                    console.log("Camera feed metadata:", cameraFeed.videoWidth, "x", cameraFeed.videoHeight);
+                };
+                activeCameraFeed.onloadedmetadata = () => {
+                    console.log("Active camera feed metadata:", activeCameraFeed.videoWidth, "x", activeCameraFeed.videoHeight);
+                };
+
+                return true;
+            } catch (err) {
+                console.error("Camera error:", err.name, err.message);
+                let errorMessage = "Failed to access camera. ";
+                if (err.name === "NotAllowedError") {
+                    errorMessage += "Please grant camera permissions.";
+                } else if (err.name === "NotFoundError") {
+                    errorMessage += "No camera found. Please connect a camera.";
+                } else if (err.name === "NotReadableError") {
+                    errorMessage += "Camera is in use by another app.";
+                } else if (err.name === "SecurityError") {
+                    errorMessage += "Camera blocked due to security settings.";
+                } else {
+                    errorMessage += "Unexpected error. Check your camera.";
+                }
+                alert(errorMessage);
+                return false;
+            }
+        }
+
+        // Call initCamera
         initCamera().then(success => {
             console.log("Camera initialization result:", success);
         });
@@ -509,22 +558,37 @@
 
         // Start interview button click handler
         $('#startInterviewBtn').click(async function() {
+            const button = $(this);
             const role = "{{ data.job_title or '' }}";
             const resumeText = "{{ data.resume_text | safe or '' }}";
             const jdText = "{{ data.jd_text | safe or '' }}";
+            const candidateName = "{{ data.candidate_name or 'Candidate' }}";
 
-            $(this).html('<i class="fas fa-spinner fa-spin"></i> Starting...').prop('disabled', true);
+            // Log data for debugging
+            console.log("Start Interview payload:", {
+                role: role,
+                resume_text: resumeText ? resumeText.substring(0, 50) + '...' : 'empty',
+                jd_text: jdText ? jdText.substring(0, 50) + '...' : 'empty',
+                fileName: candidateName
+            });
+
+            button.html('<i class="fas fa-spinner fa-spin"></i> Starting...').prop('disabled', true);
 
             $.ajax({
                 url: '/start_interview',
                 type: 'POST',
                 contentType: 'application/json',
+                timeout: 10000, // 10s timeout
                 data: JSON.stringify({
                     role: role,
                     resume_text: resumeText,
-                    jd_text: jdText
+                    jd_text: jdText,
+                    fileName: candidateName,
+                    experience_level: 'fresher', // Default, adjust if needed
+                    years_experience: 0 // Default, adjust if needed
                 }),
                 success: function(response) {
+                    console.log("Start Interview response:", response);
                     if (response.status === 'started') {
                         $('.setup-section').hide();
                         $('#interviewSection').show();
@@ -533,11 +597,27 @@
                         interviewInProgress = true;
                         startTimer();
                         askQuestion();
+                    } else {
+                        alert('Unexpected response: ' + (response.message || 'Invalid response'));
+                        button.html('<i class="fas fa-play"></i> Start Interview').prop('disabled', false);
                     }
                 },
                 error: function(xhr) {
-                    alert('Error: ' + (xhr.responseJSON?.message || 'Failed to start interview'));
-                    $('#startInterviewBtn').html('<i class="fas fa-play"></i> Start Interview').prop('disabled', false);
+                    console.error("Start Interview error:", xhr.status, xhr.responseText);
+                    let errorMessage = 'Failed to start interview. ';
+                    if (xhr.status === 0) {
+                        errorMessage += 'Server not reachable. Check your connection or server status.';
+                    } else if (xhr.status === 500) {
+                        errorMessage += 'Server error. Please try again later.';
+                    } else if (xhr.status === 403) {
+                        errorMessage += 'Interview already completed.';
+                    } else if (xhr.status === 404) {
+                        errorMessage += 'Invalid interview link.';
+                    } else {
+                        errorMessage += (xhr.responseJSON?.message || 'Unknown error.');
+                    }
+                    alert('Error: ' + errorMessage);
+                    button.html('<i class="fas fa-play"></i> Start Interview').prop('disabled', false);
                 }
             });
         });
@@ -551,7 +631,7 @@
                     interviewComplete();
                 } else if (response.status === 'success') {
                     currentQuestionNum = response.question_number;
-                    currentAnswer = ''; // Reset for new question
+                    currentAnswer = '';
                     updateProgress(currentQuestionNum - 1, totalQuestions);
                     addBotMessage(response.question);
                     playAudio(response.audio, function() {
@@ -956,4 +1036,3 @@
     </script>
 </body>
 </html>
-

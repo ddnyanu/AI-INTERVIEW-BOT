@@ -155,8 +155,7 @@ def interview(token):
           
             logger.debug("✅ Data received from Django:", data)
 
-            match_id = data.get('id')
-            session['id'] = match_id
+            session['id'] = data.get('id')
             logger.debug(f"Session ID set: {session['id']}")
             resume_jd_url = f"https://ibot-backend.onrender.com/jobs/resume-jd-by-id/{match_id}/"
             resume_jd_response = requests.get(resume_jd_url, timeout=30)
@@ -177,7 +176,7 @@ def interview(token):
                 logging.debug("Stored Resume & JD in session: %s", session)
 
                 # Optionally combine all data for template
-                full_data = {**data, **resume_jd_data}
+                full_data = {**interview_data, **resume_jd_data}
 
                 return render_template("index.html", data=full_data)
             else:

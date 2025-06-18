@@ -1,0 +1,22 @@
+
+Interview Report for Candidate
+Role: 
+Experience Level: fresher
+Years of Experience: 0
+
+Interview Duration: 3m 31s
+Average Rating: 4.8/10
+Overall Performance: Low
+
+Conversation Transcript with Feedback:
+Q1: As this is your first job application, what motivated you to choose this career path?
+Response: I want to be a software developer that's why I have choose this path
+Q2: What subjects or courses in your education do you think will be most applicable to this role?
+Response: I will some languages like Java Python or more applicable to this role
+Q3: Have you completed any internships or taken on any responsibilities that could be relevant to this position?
+Response: currently I am doing internship in Texas Technologies as a software developer
+Q4: What technical skills have you developed so far, and how do you plan to apply them in this role?
+Response: I developed a bacon skills like rasgul API in etc
+Q5: What are your expectations for your first job, and how do you see yourself contributing to our team?
+
+End of Report
