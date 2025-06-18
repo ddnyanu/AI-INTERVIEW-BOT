@@ -155,36 +155,15 @@ def interview(token):
           
             logger.debug("✅ Data received from Django:", data)
 
-            match_id = data.get('id')
-            session['id'] = match_id
+            session['id'] = data.get('id')
             logger.debug(f"Session ID set: {session['id']}")
-            resume_jd_url = f"https://ibot-backend.onrender.com/jobs/resume-jd-by-id/{match_id}/"
-            resume_jd_response = requests.get(resume_jd_url, timeout=30)
+            # session['resume_text'] = data.get('resume_text')
+            # session['phone_number'] = data.get('phone_number')
 
-            if resume_jd_response.status_code == 200:
-                resume_jd_data = resume_jd_response.json()
+            # logger.debug("🔍 JD Snippet:", (session.get('jd_text') or '')[:300])
+            # logger.debug("🔍 Resume Snippet:", (session.get('resume_text') or '')[:300])
 
-                # ✅ Store Resume & JD info in Flask session
-                session['resume_text'] = resume_jd_data.get('resume_text')
-                session['jd_text'] = resume_jd_data.get('jd_text')
-                session['organization_name'] = resume_jd_data.get('organization_name')
-                session['job_title'] = resume_jd_data.get('job_title')
-                session['email'] = resume_jd_data.get('email')
-                session['candidate_name'] = resume_jd_data.get('candidate_name')
-                username_extrnal = resume_jd_data.get('candidate_name', 'Anonymous')
-                organization_name_extrnal = resume_jd_data.get('organization_name', 'Unknown')
-
-                logging.debug("Stored Resume & JD in session: %s", session)
-
-                # Optionally combine all data for template
-                full_data = {**data, **resume_jd_data}
-
-                return render_template("index.html", data=full_data)
-            else:
-                logging.warning("Resume+JD not found or error.")
-                return render_template("error.html", message="❌ Unable to fetch resume and JD."), 500
-      
-       
+            return render_template("index.html", data=data)
 
         elif response.status_code == 403:
             return render_template("error.html", message="✅ Interview already completed."), 403

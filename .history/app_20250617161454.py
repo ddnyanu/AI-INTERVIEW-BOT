@@ -142,22 +142,58 @@ def before_request():
 
 
 
+# @app.route('/jobs/interview/<token>/')
+# def interview(token):
+#     try:
+#         response = requests.get(f"{DJANGO_API_URL}{token}/",timeout=30)
+#         print(f"🔍 Requesting interview data from: {DJANGO_API_URL}{token}/")
+#         print("🌐 Response status:", response.status_code)
+#         logger.debug(response.text)  # Log the response text for debugging
+
+#         if response.status_code == 200:
+#             data = response.json()
+          
+#             logger.debug("✅ Data received from Django:", data)
+
+#             session['id'] = data.get('id')
+#             logger.debug(f"Session ID set: {session['id']}")
+#             # session['resume_text'] = data.get('resume_text')
+#             # session['phone_number'] = data.get('phone_number')
+
+#             # logger.debug("🔍 JD Snippet:", (session.get('jd_text') or '')[:300])
+#             # logger.debug("🔍 Resume Snippet:", (session.get('resume_text') or '')[:300])
+
+#             return render_template("index.html", data=data)
+
+#         elif response.status_code == 403:
+#             return render_template("error.html", message="✅ Interview already completed."), 403
+#         elif response.status_code == 404:
+#             return render_template("error.html", message="❌ Invalid or expired interview link."), 404
+#         elif response.status_code == 410:
+#             return render_template("error.html", message="❌ Interview link has expired."), 410
+#         else:
+#             print("❌ Unexpected status code:", response.status_code)
+#             print("❌ Response content:", response.text)
+#             return render_template("error.html", message="Something went wrong. Please try again later."), 500
+
+#     except Exception as e:
+#         print("❌ Exception while contacting Django:", str(e))
+#         return render_template("error.html", message="⚠ Server error while retrieving interview data."), 500
+
 @app.route('/jobs/interview/<token>/')
 def interview(token):
     try:
-        response = requests.get(f"{DJANGO_API_URL}{token}/",timeout=30)
-        print(f"🔍 Requesting interview data from: {DJANGO_API_URL}{token}/")
-        print("🌐 Response status:", response.status_code)
-        logger.debug(response.text)  # Log the response text for debugging
+        # Step 1: Get interview data from Django using token
+        interview_response = requests.get(f"{DJANGO_API_URL}{token}/", timeout=30)
+        logging.debug(f"Requesting interview data from: {DJANGO_API_URL}{token}/")
+        logging.debug("Interview response status: %s", interview_response.status_code)
 
-        if response.status_code == 200:
-            data = response.json()
-          
-            logger.debug("✅ Data received from Django:", data)
-
-            match_id = data.get('id')
+        if interview_response.status_code == 200:
+            interview_data = interview_response.json()
+            match_id = interview_data.get('id')  # Get ID to use for resume+jd
             session['id'] = match_id
-            logger.debug(f"Session ID set: {session['id']}")
+
+            # Step 2: Get Resume & JD data using ID
             resume_jd_url = f"https://ibot-backend.onrender.com/jobs/resume-jd-by-id/{match_id}/"
             resume_jd_response = requests.get(resume_jd_url, timeout=30)
 
@@ -177,31 +213,26 @@ def interview(token):
                 logging.debug("Stored Resume & JD in session: %s", session)
 
                 # Optionally combine all data for template
-                full_data = {**data, **resume_jd_data}
+                full_data = {**interview_data, **resume_jd_data}
+
 
                 return render_template("index.html", data=full_data)
             else:
                 logging.warning("Resume+JD not found or error.")
                 return render_template("error.html", message="❌ Unable to fetch resume and JD."), 500
-      
-       
 
-        elif response.status_code == 403:
+        elif interview_response.status_code == 403:
             return render_template("error.html", message="✅ Interview already completed."), 403
-        elif response.status_code == 404:
+        elif interview_response.status_code == 404:
             return render_template("error.html", message="❌ Invalid or expired interview link."), 404
-        elif response.status_code == 410:
+        elif interview_response.status_code == 410:
             return render_template("error.html", message="❌ Interview link has expired."), 410
         else:
-            print("❌ Unexpected status code:", response.status_code)
-            print("❌ Response content:", response.text)
-            return render_template("error.html", message="Something went wrong. Please try again later."), 500
+            return render_template("error.html", message="❌ Unexpected error. Please try again later."), 500
 
     except Exception as e:
-        print("❌ Exception while contacting Django:", str(e))
-        return render_template("error.html", message="⚠ Server error while retrieving interview data."), 500
-
-    
+        logging.error("Exception in interview(): %s", str(e))
+        return render_template("error.html", message="⚠ Server error while retrieving interview data."), 500    
     
 
 

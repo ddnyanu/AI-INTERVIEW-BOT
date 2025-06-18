@@ -44,7 +44,7 @@
             height: 80vh;
         }
         .thankyou-container {
-            display: none; /* Ensure hidden by default */
+            display: none;
             background-color: #222831;
             border-radius: 10px;
             padding: 20px;
@@ -68,11 +68,10 @@
         }
         .camera-feed {
             width: 100%;
-            height: 60vh;
+            height: 65vh;
             object-fit: cover;
             border-radius: 12px;
             box-shadow: 0 0 10px rgba(0,0,0,0);
-            background-color: #000; /* Fallback for no video */
         }
         #micButton {
             background-color: #222831;
@@ -84,7 +83,7 @@
         }
         #micButton.recording {
             background-color: #DFD0B8;
-            color: #222831;
+            color:#222831;
             animation: pulse 1.5s infinite;
         }
         @keyframes pulse {
@@ -190,14 +189,6 @@
             color: #DFD0B8;
             border: 1px solid #393e46;
         }
-        .btn-end {
-            background-color: #DFD0B8;
-            color: #222831;
-            padding: 10px 20px;
-            font-size: 1.15rem;
-            border-radius: 50px;
-            border: none;
-        }
     </style>
 </head>
 <body>
@@ -208,82 +199,84 @@
     </div>
 
     <!-- Main Container -->
-    <div class="container">
-        <!-- Setup Section (Visible by default) -->
-        <div class="setup-section">
-            <div class="setup-container">
-                <div class="row">
-                    <!-- Left Side: Welcome Text, Key Features, and Start Button -->
-                    <div class="col-md-6 d-flex flex-column">
-                        <div class="p-3 rounded">
-                            <p class="mb-0" style="font-size: 1.3rem;">
-                                <strong>Hey {{ data.candidate_name }}!</strong>
-                            </p>
-                            <p class="mb-2" style="font-size: 1rem;">
-                                Welcome to your virtual interview with our <strong>AI-powered assistant</strong>.
-                            </p>
-                            <p class="mb-1" style="font-size: 0.95rem;">
-                                <strong>Organization:</strong> {{ data.organization_name or 'N/A' }}
-                            </p>
-                            <p class="mb-1" style="font-size: 0.95rem;">
-                                <strong>Job Title:</strong> {{ data.job_title or 'N/A' }}
-                            </p>
-                            <p class="mb-1" style="font-size: 0.95rem;">
-                                <strong>Email:</strong> {{ data.email or 'N/A' }}
-                            </p>
-                            <p class="mt-2" style="font-size: 0.9rem; color: #aaaaaa;">
-                                Please ensure you're prepared — your responses will help us evaluate your fit for this role.
-                            </p>
-                        </div>
-                        <div class="mt-4 p-3 rounded" style="background-color: #2c2f36;">
-                            <h5 style="color: #DFD0B8; font-size: 1.1rem;">🔑 Key Features to Know Before Starting</h5>
-                            <ul style="color: #DFD0B8; font-size: 0.95rem; padding-left: 1.2rem; margin-top: 10px;">
-                                 <li>Guides users through interview tasks</li>
-  <li>Provides real-time AI assistance</li>
-  <li>Generates performance reports</li>
-  <li>Interactive and easy-to-use interface</li>
-                            </ul>
-                        </div>
-                        <button type="button" id="startInterviewBtn" class="btn btn-primary mt-3">
-                            <i class="fas fa-play"></i> Start Interview
-                        </button>
+   <div class="container">
+    <!-- Setup Section (Visible by default) -->
+    <div class="setup-section">
+        <div class="setup-container">
+            <div class="row">
+                <!-- Left Side: Welcome Text, Key Features, and Start Button -->
+                <div class="col-md-6 d-flex flex-column">
+                    <div class="p-3 rounded">
+                        <p class="mb-0" style="font-size: 1.3rem;">
+                            <strong>Hey {{ data.candidate_name }}!</strong>
+                        </p>
+                        <p class="mb-2" style="font-size: 1rem;">
+                            Welcome to your virtual interview with our <strong>AI-powered assistant</strong>.
+                        </p>
+                        <p class="mb-1" style="font-size: 0.95rem;">
+                            <strong>Organization:</strong> {{ data.organization_name or 'N/A' }}
+                        </p>
+                        <p class="mb-1" style="font-size: 0.95rem;">
+                            <strong>Job Title:</strong> {{ data.job_title or 'N/A' }}
+                        </p>
+                        <p class="mb-1" style="font-size: 0.95rem;">
+                            <strong>Email:</strong> {{ data.email or 'N/A' }}
+                        </p>
+                        <p class="mt-2" style="font-size: 0.9rem; color: #aaaaaa;">
+                            Please ensure you're prepared — your responses will help us evaluate your fit for this role.
+                        </p>
                     </div>
-                    <!-- Right Side: Camera Preview -->
-                    <div class="col-md-6 d-flex justify-content-center align-items-center">
-                        <video id="cameraFeed" class="camera-feed" autoplay playsinline></video>
+                    <div class="mt-4 p-3 rounded" style="background-color: #2c2f36;">
+                        <h5 style="color: #DFD0B8; font-size: 1.1rem;">🔑 Key Features to Know Before Starting</h5>
+                        <ul style="color: #DFD0B8; font-size: 0.95rem; padding-left: 1.2rem; margin-top: 10px;">
+                            <li>AI that guides you through a series of tasks</li>
+                            <li>Give us your honest feedback</li>
+                            <li>You can ask the AI for help at any point</li>
+                            <li>Perform tasks and answer the questions</li>
+                        </ul>
                     </div>
+                    <button type="button" id="startInterviewBtn" class="btn btn-primary mt-3">
+                        <i class="fas fa-play"></i> Start Interview
+                    </button>
+                </div>
+                <!-- Right Side: Camera Preview -->
+                <div class="col-md-6 d-flex justify-content-center align-items-center">
+                    <video id="cameraFeed" class="camera-feed" autoplay playsinline></video>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Interview Section (Hidden by default) -->
-        <div class="interview-container" id="interviewSection" style="display: none;">
-            <div class="row" style="height: 100%;">
-                <!-- Left Panel: Conversation and Mic Button -->
-                <div class="col-md-6 d-flex flex-column" style="height: 100%;">
-                    <div class="conversation-box flex-grow-1" id="conversationBox" style="height: 100%;">
-                        <!-- Messages will appear here -->
-                    </div>
-                    <div class="d-flex justify-content-center mt-2">
-                        <button class="btn" id="micButton">
-                            <i class="fas fa-microphone"></i> Speak
-                        </button>
-                    </div>
-                </div>
-                <!-- Right Panel: Camera and Controls -->
-                <div class="col-md-6 d-flex flex-column" style="height: 68vh;">
-                    <video id="activeCameraFeed" class="camera-feed flex-grow-1" autoplay playsinline></video>
-                    <div class="d-flex justify-content-between mt-3">
-                        <button class="btn-end" id="endSessionBtn" style="background-color: #DFD0B8; color: #1e1e1e;">
-                            End Session
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Interview Section (Hidden by default) -->
+   <div class="interview-container hidden" id="interviewSection">
+  <div class="flex h-screen">
+    <!-- Left Panel -->
+    <div class="w-1/2 flex flex-col">
+      <div id="conversationBox" class="flex-grow overflow-auto p-4 bg-gray-100">
+        <!-- Messages will appear here -->
+      </div>
+      <div class="flex justify-center p-4 bg-white">
+        <button class="bg-blue-600 text-white px-4 py-2 rounded" id="micButton">
+          <i class="fas fa-microphone"></i> Speak
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="w-1/2 flex flex-col">
+      <video id="activeCameraFeed" class="flex-grow bg-black" autoplay playsinline></video>
+      <div class="flex justify-between p-4 bg-white">
+        <button class="px-4 py-2 rounded text-black" style="background-color: #DFD0B8;" id="endSessionBtn">
+          End Session
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
         <!-- Thank You Section (Hidden by default) -->
-        <div class="thankyou-container" id="thankYouSection" style="display: none;">
+        <div class="thankyou-container" id="thankYouSection">
             <h2 class="mb-4">Thank You!</h2>
             <p class="mb-4" style="font-size: 1.2rem;">
                 Thank you, {{ data.candidate_name }}, for completing your interview with NEX AI.
@@ -346,126 +339,7 @@
 
         // Initialize UI
         $('#interviewSection').hide();
-        $('#thankYouSection').hide(); // Ensure Thank You section is hidden
-
-        // Initialize camera with enhanced error handling
-        async function initCamera() {
-    try {
-        if (mediaStream) {
-            mediaStream.getTracks().forEach(track => track.stop());
-            console.log("Existing media stream stopped");
-        }
-        mediaStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
-                width: { ideal: 640 }, 
-                height: { ideal: 480 }, 
-                facingMode: "user" 
-            },
-            audio: false
-        });
-        const cameraFeed = document.getElementById('cameraFeed');
-        const activeCameraFeed = document.getElementById('activeCameraFeed');
-        if (cameraFeed) {
-            cameraFeed.srcObject = mediaStream;
-            console.log("Camera feed assigned to setup section");
-        }
-        if (activeCameraFeed) {
-            activeCameraFeed.srcObject = mediaStream;
-            console.log("Camera feed assigned to interview section");
-        }
-        console.log("Camera initialized successfully");
-        return true;
-    } catch (err) {
-        console.error("Error accessing camera:", err.name, err.message);
-        alert("Failed to access camera. Please ensure camera permissions are granted and try again.");
-        return false;
-    }
-}
-
-        // Call initCamera and log result
-        initCamera().then(success => {
-            console.log("Camera initialization result:", success);
-        });
-
-        // Initialize speech recognition
-        function initSpeechRecognition() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                console.error("Speech recognition not supported in this browser");
-                alert('Your browser does not support speech recognition. Please use Chrome or Edge.');
-                $('#micButton').prop('disabled', true);
-                return null;
-            }
-
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = true;
-            recognition.maxAlternatives = 1;
-            recognition.lang = 'en-US';
-
-            recognition.onaudiostart = function() {
-                isRecording = true;
-                $('#micButton').addClass('recording');
-                lastActivityTime = Date.now();
-                startPauseDetection();
-                console.log("Speech recognition started");
-            };
-
-            recognition.onsoundend = function() {
-                lastActivityTime = Date.now();
-                console.log("Speech recognition sound ended");
-            };
-
-            recognition.onerror = function(event) {
-                console.error('Speech recognition error:', event.error);
-                if (event.error !== 'no-speech') {
-                    isRecording = false;
-                    $('#micButton').removeClass('recording');
-                    stopPauseDetection();
-                }
-            };
-
-            recognition.onend = function() {
-                isRecording = false;
-                $('#micButton').removeClass('recording');
-                if (interviewInProgress && !$('#pauseDialog').length && !submittingAnswer) {
-                    try {
-                        setTimeout(() => {
-                            recognition.start();
-                            console.log("Speech recognition restarted");
-                        }, 300);
-                    } catch (e) {
-                        console.error("Error restarting recognition:", e);
-                    }
-                }
-            };
-
-            recognition.onresult = function(event) {
-                let interimTranscript = '';
-                let finalTranscript = '';
-
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const transcript = event.results[i][0].transcript;
-                    if (event.results[i].isFinal) {
-                        finalTranscript += transcript;
-                    } else {
-                        interimTranscript += transcript;
-                    }
-                }
-
-                lastActivityTime = Date.now();
-
-                if (finalTranscript) {
-                    currentAnswer += ' ' + finalTranscript;
-                }
-                const displayText = currentAnswer.trim() + (interimTranscript ? ' ' + interimTranscript : '');
-                if (displayText) {
-                    addUserMessage(displayText);
-                }
-            };
-        }
-
-        initSpeechRecognition();
+        $('#thankYouSection').hide();
 
         // Start timer
         function startTimer() {
@@ -507,11 +381,111 @@
             document.getElementById("interviewTimer")?.remove();
         }
 
+        // Initialize camera
+        async function initCamera() {
+            try {
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                }
+                
+                mediaStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
+                    audio: false
+                });
+                
+                const cameraFeed = document.getElementById('cameraFeed');
+                const activeCameraFeed = document.getElementById('activeCameraFeed');
+
+                if (cameraFeed) cameraFeed.srcObject = mediaStream;
+                if (activeCameraFeed) activeCameraFeed.srcObject = mediaStream;
+
+                return true;
+            } catch (err) {
+                console.error("Error accessing camera:", err);
+                return false;
+            }
+        }
+        initCamera();
+
+        // Initialize speech recognition
+        function initSpeechRecognition() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('Your browser does not support speech recognition. Please use Chrome or Edge.');
+                $('#micButton').prop('disabled', true);
+                return null;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 1;
+            recognition.lang = 'en-US';
+
+            recognition.onaudiostart = function() {
+                isRecording = true;
+                $('#micButton').addClass('recording');
+                lastActivityTime = Date.now();
+                startPauseDetection();
+            };
+
+            recognition.onsoundend = function() {
+                lastActivityTime = Date.now();
+            };
+
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error', event.error);
+                if (event.error !== 'no-speech') {
+                    isRecording = false;
+                    $('#micButton').removeClass('recording');
+                    stopPauseDetection();
+                }
+            };
+
+            recognition.onend = function() {
+                isRecording = false;
+                $('#micButton').removeClass('recording');
+                if (interviewInProgress && !$('#pauseDialog').length && !submittingAnswer) {
+                    try {
+                        setTimeout(() => recognition.start(), 300);
+                    } catch (e) {
+                        console.error("Error restarting recognition:", e);
+                    }
+                }
+            };
+
+            recognition.onresult = function(event) {
+                let interimTranscript = '';
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+
+                lastActivityTime = Date.now();
+
+                if (finalTranscript) {
+                    currentAnswer += ' ' + finalTranscript;
+                }
+                const displayText = currentAnswer.trim() + (interimTranscript ? ' ' + interimTranscript : '');
+                if (displayText) {
+                    addUserMessage(displayText);
+                }
+            };
+        }
+
+        initSpeechRecognition();
+
         // Start interview button click handler
         $('#startInterviewBtn').click(async function() {
-            const role = "{{ data.job_title or '' }}";
-            const resumeText = "{{ data.resume_text | safe or '' }}";
-            const jdText = "{{ data.jd_text | safe or '' }}";
+            const role = "{{ data.job_title }}";
+            const resumeText = "{{ data.resume_text | safe }}";
+            const jdText = "{{ data.jd_text | safe }}";
 
             $(this).html('<i class="fas fa-spinner fa-spin"></i> Starting...').prop('disabled', true);
 
@@ -557,6 +531,7 @@
                     playAudio(response.audio, function() {
                         if (autoStartRecording) startRecording();
                     });
+                    $('#continueBtn').prop('disabled', false);
                 }
             }).fail(function(xhr) {
                 console.error('Error getting question:', xhr.responseText);
@@ -568,7 +543,6 @@
             if (!isRecording && interviewInProgress) {
                 try {
                     recognition.start();
-                    console.log("Recording started");
                 } catch (e) {
                     console.error("Error starting recognition:", e);
                 }
@@ -625,11 +599,9 @@
             interviewInProgress = false;
             if (mediaStream) {
                 mediaStream.getTracks().forEach(track => track.stop());
-                console.log("Media stream stopped on interview completion");
             }
             if (recognition) {
                 recognition.stop();
-                console.log("Speech recognition stopped");
             }
             stopPauseDetection();
             clearInterval(timerInterval);
@@ -669,7 +641,6 @@
                     $(this).find('i').removeClass('fa-microphone-slash').addClass('fa-microphone');
                     try {
                         recognition.start();
-                        console.log("Speech recognition resumed");
                     } catch (e) {
                         console.error("Error resuming recognition:", e);
                     }
@@ -677,11 +648,20 @@
                     $(this).addClass('paused');
                     $(this).find('i').removeClass('fa-microphone').addClass('fa-microphone-slash');
                     recognition.stop();
-                    console.log("Speech recognition paused");
                 }
             } else {
                 startRecording();
             }
+        });
+
+        // Continue button click handler
+        $('#continueBtn').click(function() {
+            if (currentAnswer.trim()) {
+                processAnswer(currentAnswer.trim());
+            } else {
+                askQuestion();
+            }
+            $(this).prop('disabled', true);
         });
 
         // End session button click handler
@@ -956,4 +936,3 @@
     </script>
 </body>
 </html>
-
