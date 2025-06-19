@@ -226,7 +226,7 @@
                                 <strong>Organization:</strong> {{ data.organization_name or 'N/A' }}
                             </p>
                             <p class="mb-1" style="font-size: 0.95rem;">
-                                <strong>Job Title:</strong> {{ data.job_title or 'N/A'}}
+                                <strong>Job Title:</strong> {{ data.job_title or 'N/A' }}
                             </p>
                             <p class="mb-1" style="font-size: 0.95rem;">
                                 <strong>Email:</strong> {{ data.email or 'N/A' }}
@@ -322,7 +322,15 @@
             </div>
         </div>
     </div>
-
+<!-- In index.html -->
+<script>
+    // Check what data is available
+    console.log("Template data:", {
+        candidate_name: "{{ data.candidate_name }}",
+        job_title: "{{ data.job_title }}",
+        resume_text: "{{ data.resume_text | safe | truncate(50) }}"
+    });
+</script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -349,12 +357,53 @@
         $('#thankYouSection').hide(); // Ensure Thank You section is hidden
 
         // Initialize camera with enhanced error handling
-        async function initCamera() {
+//         async function initCamera() {
+//     try {
+//         if (mediaStream) {
+//             mediaStream.getTracks().forEach(track => track.stop());
+//             console.log("Existing media stream stopped");
+//         }
+//         mediaStream = await navigator.mediaDevices.getUserMedia({ 
+//             video: { 
+//                 width: { ideal: 640 }, 
+//                 height: { ideal: 480 }, 
+//                 facingMode: "user" 
+//             },
+//             audio: false
+//         });
+//         const cameraFeed = document.getElementById('cameraFeed');
+//         const activeCameraFeed = document.getElementById('activeCameraFeed');
+//         if (cameraFeed) {
+//             cameraFeed.srcObject = mediaStream;
+//             console.log("Camera feed assigned to setup section");
+//         }
+//         if (activeCameraFeed) {
+//             activeCameraFeed.srcObject = mediaStream;
+//             console.log("Camera feed assigned to interview section");
+//         }
+//         console.log("Camera initialized successfully");
+//         return true;
+//     } catch (err) {
+//         console.error("Error accessing camera:", err.name, err.message);
+//         alert("Failed to access camera. Please ensure camera permissions are granted and try again.");
+//         return false;
+//     }
+// }
+
+//         // Call initCamera and log result
+//         initCamera().then(success => {
+//             console.log("Camera initialization result:", success);
+//         });
+// Initialize camera with enhanced error handling
+async function initCamera() {
     try {
+        // Stop any existing streams
         if (mediaStream) {
             mediaStream.getTracks().forEach(track => track.stop());
             console.log("Existing media stream stopped");
         }
+        
+        // Get new media stream
         mediaStream = await navigator.mediaDevices.getUserMedia({ 
             video: { 
                 width: { ideal: 640 }, 
@@ -363,8 +412,11 @@
             },
             audio: false
         });
+        
+        // Assign to both camera feeds
         const cameraFeed = document.getElementById('cameraFeed');
         const activeCameraFeed = document.getElementById('activeCameraFeed');
+        
         if (cameraFeed) {
             cameraFeed.srcObject = mediaStream;
             console.log("Camera feed assigned to setup section");
@@ -373,6 +425,7 @@
             activeCameraFeed.srcObject = mediaStream;
             console.log("Camera feed assigned to interview section");
         }
+        
         console.log("Camera initialized successfully");
         return true;
     } catch (err) {
@@ -382,11 +435,14 @@
     }
 }
 
-        // Call initCamera and log result
-        initCamera().then(success => {
-            console.log("Camera initialization result:", success);
-        });
-
+// Call initCamera when the page loads, regardless of backend data
+document.addEventListener('DOMContentLoaded', function() {
+    initCamera().then(success => {
+        console.log("Camera initialization result:", success);
+        // Enable start interview button only after camera is initialized
+        $('#startInterviewBtn').prop('disabled', !success);
+    });
+});
         // Initialize speech recognition
         function initSpeechRecognition() {
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
@@ -508,82 +564,112 @@
         }
 
         // Start interview button click handler
-        $('#startInterviewBtn').click(async function() {
-            const role = `{{ (data.job_title or '') | tojson | safe }}`;
-            const resumeText = `{{ (data.resume_text or '') | tojson | safe }}`;
-            const jdText = `{{ (data.jd_text or '') | tojson | safe }}`;
+        // $('#startInterviewBtn').click(async function() {
+        //     const role = "{{ data.job_title or '' }}";
+        //     const resumeText = "{{ data.resume_text | safe or '' }}";
+        //     const jdText = "{{ data.jd_text | safe or '' }}";
 
-            $(this).html('<i class="fas fa-spinner fa-spin"></i> Starting...').prop('disabled', true);
+        //     $(this).html('<i class="fas fa-spinner fa-spin"></i> Starting...').prop('disabled', true);
 
-            $.ajax({
-                url: '/start_interview',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    role: role,
-                    resume_text: resumeText,
-                    jd_text: jdText
-                }),
-                success: function(response) {
-                    if (response.status === 'started') {
-                        $('.setup-section').hide();
-                        $('#interviewSection').show();
-                        totalQuestions = response.total_questions;
-                        currentQuestionNum = 1;
-                        interviewInProgress = true;
-                        startTimer();
-                        askQuestion();
-                    }
-                },
-                error: function(xhr) {
-                    alert('Error: ' + (xhr.responseJSON?.message || 'Failed to start interview'));
-                    $('#startInterviewBtn').html('<i class="fas fa-play"></i> Start Interview').prop('disabled', false);
+        //     $.ajax({
+        //         url: '/start_interview',
+        //         type: 'POST',
+        //         contentType: 'application/json',
+        //         data: JSON.stringify({
+        //             role: role,
+        //             resume_text: resumeText,
+        //             jd_text: jdText
+        //         }),
+        //         success: function(response) {
+        //             if (response.status === 'started') {
+        //                 $('.setup-section').hide();
+        //                 $('#interviewSection').show();
+        //                 totalQuestions = response.total_questions;
+        //                 currentQuestionNum = 1;
+        //                 interviewInProgress = true;
+        //                 startTimer();
+        //                 askQuestion();
+        //             }
+        //         },
+        //         error: function(xhr) {
+        //             alert('Error: ' + (xhr.responseJSON?.message || 'Failed to start interview'));
+        //             $('#startInterviewBtn').html('<i class="fas fa-play"></i> Start Interview').prop('disabled', false);
+        //         }
+        //     });
+        // });
+        // Start interview button click handler
+$('#startInterviewBtn').click(async function() {console.log("Start Btn Clivked")})
+$('#startInterviewBtn').click(async function() {
+    const role = "{{ data.job_title or '' }}";
+    const resumeText = "{{ data.resume_text | safe or '' }}";
+    const jdText = "{{ data.jd_text | safe or '' }}";
+
+    // Disable button during processing
+    $(this).html('<i class="fas fa-spinner fa-spin"></i> Starting...').prop('disabled', true);
+
+    try {
+        // First ensure camera is working
+        const cameraReady = await initCamera();
+        if (!cameraReady) {
+            alert("Please enable camera access to continue");
+            $(this).html('<i class="fas fa-play"></i> Start Interview').prop('disabled', false);
+            return;
+        }
+
+        // Then start interview
+        $.ajax({
+            url: '/start_interview',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                role: role,
+                resume_text: resumeText,
+                jd_text: jdText
+            }),
+            success: function(response) {
+                if (response.status === 'started') {
+                    $('.setup-section').hide();
+                    $('#interviewSection').show();
+                    totalQuestions = response.total_questions;
+                    currentQuestionNum = 1;
+                    interviewInProgress = true;
+                    startTimer();
+                    askQuestion();
                 }
-            });
+            },
+            error: function(xhr) {
+                alert('Error: ' + (xhr.responseJSON?.message || 'Failed to start interview'));
+                $('#startInterviewBtn').html('<i class="fas fa-play"></i> Start Interview').prop('disabled', false);
+            }
         });
+    } catch (err) {
+        console.error("Error starting interview:", err);
+        alert("Failed to initialize interview. Please try again.");
+        $(this).html('<i class="fas fa-play"></i> Start Interview').prop('disabled', false);
+    }
+});
 
         // Ask question
-        // function askQuestion() {
-        //     if (!interviewInProgress || totalSeconds <= 0) return;
+        function askQuestion() {
+            if (!interviewInProgress || totalSeconds <= 0) return;
 
-        //     $.get('/get_question', function(response) {
-        //         if (response.status === 'completed' || totalSeconds <= 0) {
-        //             interviewComplete();
-        //         } else if (response.status === 'success') {
-        //             currentQuestionNum = response.question_number;
-        //             currentAnswer = ''; // Reset for new question
-        //             updateProgress(currentQuestionNum - 1, totalQuestions);
-        //             addBotMessage(response.question);
-        //             playAudio(response.audio, function() {
-        //                 if (autoStartRecording) startRecording();
-        //             });
-        //         }
-        //     }).fail(function(xhr) {
-        //         console.error('Error getting question:', xhr.responseText);
-        //     });
-        // }
-function askQuestion() {
-    if (!interviewInProgress || totalSeconds <= 0) return;
-
-    $.get('/get_question', function(response) {
-        if (response.status === 'completed' || totalSeconds <= 0) {
-            interviewComplete();
-        } else if (response.status === 'success') {
-            currentQuestionNum = response.question_number;
-            currentAnswer = ''; // Reset for new question
-            // Clear 'current' answer marker for previous question (if any)
-            const conversationBox = $('#conversationBox');
-            conversationBox.find(`.user-message[data-answer="current"]`).removeAttr('data-answer');
-            updateProgress(currentQuestionNum - 1, totalQuestions);
-            addBotMessage(response.question);
-            playAudio(response.audio, function() {
-                if (autoStartRecording) startRecording();
+            $.get('/get_question', function(response) {
+                if (response.status === 'completed' || totalSeconds <= 0) {
+                    interviewComplete();
+                } else if (response.status === 'success') {
+                    currentQuestionNum = response.question_number;
+                    currentAnswer = ''; // Reset for new question
+                    updateProgress(currentQuestionNum - 1, totalQuestions);
+                    addBotMessage(response.question);
+                    playAudio(response.audio, function() {
+                        if (autoStartRecording) startRecording();
+                    });
+                }
+            }).fail(function(xhr) {
+                console.error('Error getting question:', xhr.responseText);
             });
         }
-    }).fail(function(xhr) {
-        console.error('Error getting question:', xhr.responseText);
-    });
-}
+
         // Start recording
         function startRecording() {
             if (!isRecording && interviewInProgress) {
@@ -597,96 +683,49 @@ function askQuestion() {
         }
 
         // Process answer
-        // function processAnswer(answer) {
-        //     if (!interviewInProgress) return;
-
-        //     stopPauseDetection();
-
-        //     const video = document.getElementById('activeCameraFeed');
-        //     const canvas = document.createElement('canvas');
-        //     canvas.width = video.videoWidth;
-        //     canvas.height = video.videoHeight;
-        //     const ctx = canvas.getContext('2d');
-        //     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        //     const frameData = canvas.toDataURL('image/jpeg');
-
-        //     submittingAnswer = true;
-
-        //     $.ajax({
-        //         url: '/process_answer',
-        //         type: 'POST',
-        //         contentType: 'application/json',
-        //         data: JSON.stringify({
-        //             answer: answer,
-        //             frame: frameData
-        //         }),
-        //         success: function(response) {
-        //             submittingAnswer = false;
-        //             if (response.status === 'answer_processed') {
-        //                 currentAnswer = '';
-        //                 updateProgress(response.current_question, response.total_questions);
-        //                 currentQuestionNum = response.current_question + 1;
-
-        //                 if (response.interview_complete) {
-        //                     interviewComplete();
-        //                 } else {
-        //                     setTimeout(askQuestion, 1000);
-        //                 }
-        //             }
-        //         },
-        //         error: function(xhr) {
-        //             submittingAnswer = false;
-        //             alert('Error processing answer: ' + (xhr.responseJSON?.message || 'Unknown error'));
-        //         }
-        //     });
-        // }
         function processAnswer(answer) {
-    if (!interviewInProgress) return;
+            if (!interviewInProgress) return;
 
-    stopPauseDetection();
+            stopPauseDetection();
 
-    const video = document.getElementById('activeCameraFeed');
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const frameData = canvas.toDataURL('image/jpeg');
+            const video = document.getElementById('activeCameraFeed');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const frameData = canvas.toDataURL('image/jpeg');
 
-    submittingAnswer = true;
+            submittingAnswer = true;
 
-    // Mark current user message as submitted
-    const conversationBox = $('#conversationBox');
-    conversationBox.find(`.user-message[data-question="${currentQuestionNum}"][data-answer="current"]`).removeAttr('data-answer');
+            $.ajax({
+                url: '/process_answer',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    answer: answer,
+                    frame: frameData
+                }),
+                success: function(response) {
+                    submittingAnswer = false;
+                    if (response.status === 'answer_processed') {
+                        currentAnswer = '';
+                        updateProgress(response.current_question, response.total_questions);
+                        currentQuestionNum = response.current_question + 1;
 
-    $.ajax({
-        url: '/process_answer',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({
-            answer: answer,
-            frame: frameData
-        }),
-        success: function(response) {
-            submittingAnswer = false;
-            if (response.status === 'answer_processed') {
-                currentAnswer = '';
-                updateProgress(response.current_question, response.total_questions);
-                currentQuestionNum = response.current_question + 1;
-
-                if (response.interview_complete) {
-                    interviewComplete();
-                } else {
-                    setTimeout(askQuestion, 1000);
+                        if (response.interview_complete) {
+                            interviewComplete();
+                        } else {
+                            setTimeout(askQuestion, 1000);
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    submittingAnswer = false;
+                    alert('Error processing answer: ' + (xhr.responseJSON?.message || 'Unknown error'));
                 }
-            }
-        },
-        error: function(xhr) {
-            submittingAnswer = false;
-            alert('Error processing answer: ' + (xhr.responseJSON?.message || 'Unknown error'));
+            });
         }
-    });
-}
 
         // Interview complete
         function interviewComplete() {
@@ -753,39 +792,20 @@ function askQuestion() {
         });
 
         // End session button click handler
-        // $('#endSessionBtn').click(function() {
-        //     if (confirm("Are you sure you want to end the interview session?")) {
-        //         $.ajax({
-        //             url: '/reset_interview',
-        //             type: 'POST',
-        //             success: function() {
-        //                 interviewComplete();
-        //             },
-        //             error: function(xhr) {
-        //                 alert('Error: ' + (xhr.responseJSON?.message || 'Failed to reset interview'));
-        //             }
-        //         });
-        //     }
-        // });
-        // End session button click handler
-$('#endSessionBtn').click(function() {
-    if (confirm("Are you sure you want to end the interview session?")) {
-        $.ajax({
-            url: '/reset_interview',
-            type: 'POST',
-            success: function() {
-                // Process any pending answer before ending
-                if (currentAnswer.trim()) {
-                    processAnswer(currentAnswer.trim());
-                }
-                interviewComplete();
-            },
-            error: function(xhr) {
-                alert('Error: ' + (xhr.responseJSON?.message || 'Failed to reset interview'));
+        $('#endSessionBtn').click(function() {
+            if (confirm("Are you sure you want to end the interview session?")) {
+                $.ajax({
+                    url: '/reset_interview',
+                    type: 'POST',
+                    success: function() {
+                        interviewComplete();
+                    },
+                    error: function(xhr) {
+                        alert('Error: ' + (xhr.responseJSON?.message || 'Failed to reset interview'));
+                    }
+                });
             }
         });
-    }
-});
 
         // Restart interview button click handler
         $('#restartInterviewBtn').click(function() {
@@ -905,39 +925,22 @@ $('#endSessionBtn').click(function() {
             conversationBox.scrollTop(conversationBox[0].scrollHeight);
         }
 
-        // // Add user message
-        // function addUserMessage(message) {
-        //     const conversationBox = $('#conversationBox');
-        //     const existingMessage = conversationBox.find(`.user-message[data-question="${currentQuestionNum}"]`);
-        //     if (existingMessage.length) {
-        //         existingMessage.html(`<strong>You:</strong> ${message}`);
-        //     } else {
-        //         conversationBox.append(`
-        //             <div class="user-message" data-question="${currentQuestionNum}">
-        //                 <strong>You:</strong> ${message}
-        //             </div>
-        //         `);
-        //     }
-        //     conversationBox.scrollTop(conversationBox[0].scrollHeight);
-        // }
-// Add user message
-function addUserMessage(message) {
-    const conversationBox = $('#conversationBox');
-    const existingMessage = conversationBox.find(`.user-message[data-question="${currentQuestionNum}"][data-answer="current"]`);
-    
-    if (existingMessage.length) {
-        // Update existing message for the current answer
-        existingMessage.html(`<strong>You:</strong> ${message}`);
-    } else {
-        // Create new message for the current answer
-        conversationBox.append(`
-            <div class="user-message" data-question="${currentQuestionNum}" data-answer="current">
-                <strong>You:</strong> ${message}
-            </div>
-        `);
-    }
-    conversationBox.scrollTop(conversationBox[0].scrollHeight);
-}
+        // Add user message
+        function addUserMessage(message) {
+            const conversationBox = $('#conversationBox');
+            const existingMessage = conversationBox.find(`.user-message[data-question="${currentQuestionNum}"]`);
+            if (existingMessage.length) {
+                existingMessage.html(`<strong>You:</strong> ${message}`);
+            } else {
+                conversationBox.append(`
+                    <div class="user-message" data-question="${currentQuestionNum}">
+                        <strong>You:</strong> ${message}
+                    </div>
+                `);
+            }
+            conversationBox.scrollTop(conversationBox[0].scrollHeight);
+        }
+
         // Show interview report
         function showInterviewReport() {
             if (reportModalOpen) return;

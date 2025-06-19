@@ -226,7 +226,7 @@
                                 <strong>Organization:</strong> {{ data.organization_name or 'N/A' }}
                             </p>
                             <p class="mb-1" style="font-size: 0.95rem;">
-                                <strong>Job Title:</strong> {{ data.job_title or 'N/A'}}
+                                <strong>Job Title:</strong> {{ data.job_title or 'N/A' }}
                             </p>
                             <p class="mb-1" style="font-size: 0.95rem;">
                                 <strong>Email:</strong> {{ data.email or 'N/A' }}
@@ -509,9 +509,9 @@
 
         // Start interview button click handler
         $('#startInterviewBtn').click(async function() {
-            const role = `{{ (data.job_title or '') | tojson | safe }}`;
-            const resumeText = `{{ (data.resume_text or '') | tojson | safe }}`;
-            const jdText = `{{ (data.jd_text or '') | tojson | safe }}`;
+            const role = "{{ data.job_title or '' }}";
+            const resumeText = "{{ data.resume_text | safe or '' }}";
+            const jdText = "{{ data.jd_text | safe or '' }}";
 
             $(this).html('<i class="fas fa-spinner fa-spin"></i> Starting...').prop('disabled', true);
 
@@ -519,7 +519,7 @@
                 url: '/start_interview',
                 type: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify({
+                resume_jd_response: JSON.stringify({
                     role: role,
                     resume_text: resumeText,
                     jd_text: jdText
@@ -543,47 +543,26 @@
         });
 
         // Ask question
-        // function askQuestion() {
-        //     if (!interviewInProgress || totalSeconds <= 0) return;
+        function askQuestion() {
+            if (!interviewInProgress || totalSeconds <= 0) return;
 
-        //     $.get('/get_question', function(response) {
-        //         if (response.status === 'completed' || totalSeconds <= 0) {
-        //             interviewComplete();
-        //         } else if (response.status === 'success') {
-        //             currentQuestionNum = response.question_number;
-        //             currentAnswer = ''; // Reset for new question
-        //             updateProgress(currentQuestionNum - 1, totalQuestions);
-        //             addBotMessage(response.question);
-        //             playAudio(response.audio, function() {
-        //                 if (autoStartRecording) startRecording();
-        //             });
-        //         }
-        //     }).fail(function(xhr) {
-        //         console.error('Error getting question:', xhr.responseText);
-        //     });
-        // }
-function askQuestion() {
-    if (!interviewInProgress || totalSeconds <= 0) return;
-
-    $.get('/get_question', function(response) {
-        if (response.status === 'completed' || totalSeconds <= 0) {
-            interviewComplete();
-        } else if (response.status === 'success') {
-            currentQuestionNum = response.question_number;
-            currentAnswer = ''; // Reset for new question
-            // Clear 'current' answer marker for previous question (if any)
-            const conversationBox = $('#conversationBox');
-            conversationBox.find(`.user-message[data-answer="current"]`).removeAttr('data-answer');
-            updateProgress(currentQuestionNum - 1, totalQuestions);
-            addBotMessage(response.question);
-            playAudio(response.audio, function() {
-                if (autoStartRecording) startRecording();
+            $.get('/get_question', function(response) {
+                if (response.status === 'completed' || totalSeconds <= 0) {
+                    interviewComplete();
+                } else if (response.status === 'success') {
+                    currentQuestionNum = response.question_number;
+                    currentAnswer = ''; // Reset for new question
+                    updateProgress(currentQuestionNum - 1, totalQuestions);
+                    addBotMessage(response.question);
+                    playAudio(response.audio, function() {
+                        if (autoStartRecording) startRecording();
+                    });
+                }
+            }).fail(function(xhr) {
+                console.error('Error getting question:', xhr.responseText);
             });
         }
-    }).fail(function(xhr) {
-        console.error('Error getting question:', xhr.responseText);
-    });
-}
+
         // Start recording
         function startRecording() {
             if (!isRecording && interviewInProgress) {
@@ -597,96 +576,49 @@ function askQuestion() {
         }
 
         // Process answer
-        // function processAnswer(answer) {
-        //     if (!interviewInProgress) return;
-
-        //     stopPauseDetection();
-
-        //     const video = document.getElementById('activeCameraFeed');
-        //     const canvas = document.createElement('canvas');
-        //     canvas.width = video.videoWidth;
-        //     canvas.height = video.videoHeight;
-        //     const ctx = canvas.getContext('2d');
-        //     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        //     const frameData = canvas.toDataURL('image/jpeg');
-
-        //     submittingAnswer = true;
-
-        //     $.ajax({
-        //         url: '/process_answer',
-        //         type: 'POST',
-        //         contentType: 'application/json',
-        //         data: JSON.stringify({
-        //             answer: answer,
-        //             frame: frameData
-        //         }),
-        //         success: function(response) {
-        //             submittingAnswer = false;
-        //             if (response.status === 'answer_processed') {
-        //                 currentAnswer = '';
-        //                 updateProgress(response.current_question, response.total_questions);
-        //                 currentQuestionNum = response.current_question + 1;
-
-        //                 if (response.interview_complete) {
-        //                     interviewComplete();
-        //                 } else {
-        //                     setTimeout(askQuestion, 1000);
-        //                 }
-        //             }
-        //         },
-        //         error: function(xhr) {
-        //             submittingAnswer = false;
-        //             alert('Error processing answer: ' + (xhr.responseJSON?.message || 'Unknown error'));
-        //         }
-        //     });
-        // }
         function processAnswer(answer) {
-    if (!interviewInProgress) return;
+            if (!interviewInProgress) return;
 
-    stopPauseDetection();
+            stopPauseDetection();
 
-    const video = document.getElementById('activeCameraFeed');
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const frameData = canvas.toDataURL('image/jpeg');
+            const video = document.getElementById('activeCameraFeed');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const frameData = canvas.toDataURL('image/jpeg');
 
-    submittingAnswer = true;
+            submittingAnswer = true;
 
-    // Mark current user message as submitted
-    const conversationBox = $('#conversationBox');
-    conversationBox.find(`.user-message[data-question="${currentQuestionNum}"][data-answer="current"]`).removeAttr('data-answer');
+            $.ajax({
+                url: '/process_answer',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    answer: answer,
+                    frame: frameData
+                }),
+                success: function(response) {
+                    submittingAnswer = false;
+                    if (response.status === 'answer_processed') {
+                        currentAnswer = '';
+                        updateProgress(response.current_question, response.total_questions);
+                        currentQuestionNum = response.current_question + 1;
 
-    $.ajax({
-        url: '/process_answer',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({
-            answer: answer,
-            frame: frameData
-        }),
-        success: function(response) {
-            submittingAnswer = false;
-            if (response.status === 'answer_processed') {
-                currentAnswer = '';
-                updateProgress(response.current_question, response.total_questions);
-                currentQuestionNum = response.current_question + 1;
-
-                if (response.interview_complete) {
-                    interviewComplete();
-                } else {
-                    setTimeout(askQuestion, 1000);
+                        if (response.interview_complete) {
+                            interviewComplete();
+                        } else {
+                            setTimeout(askQuestion, 1000);
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    submittingAnswer = false;
+                    alert('Error processing answer: ' + (xhr.responseJSON?.message || 'Unknown error'));
                 }
-            }
-        },
-        error: function(xhr) {
-            submittingAnswer = false;
-            alert('Error processing answer: ' + (xhr.responseJSON?.message || 'Unknown error'));
+            });
         }
-    });
-}
 
         // Interview complete
         function interviewComplete() {
@@ -753,39 +685,20 @@ function askQuestion() {
         });
 
         // End session button click handler
-        // $('#endSessionBtn').click(function() {
-        //     if (confirm("Are you sure you want to end the interview session?")) {
-        //         $.ajax({
-        //             url: '/reset_interview',
-        //             type: 'POST',
-        //             success: function() {
-        //                 interviewComplete();
-        //             },
-        //             error: function(xhr) {
-        //                 alert('Error: ' + (xhr.responseJSON?.message || 'Failed to reset interview'));
-        //             }
-        //         });
-        //     }
-        // });
-        // End session button click handler
-$('#endSessionBtn').click(function() {
-    if (confirm("Are you sure you want to end the interview session?")) {
-        $.ajax({
-            url: '/reset_interview',
-            type: 'POST',
-            success: function() {
-                // Process any pending answer before ending
-                if (currentAnswer.trim()) {
-                    processAnswer(currentAnswer.trim());
-                }
-                interviewComplete();
-            },
-            error: function(xhr) {
-                alert('Error: ' + (xhr.responseJSON?.message || 'Failed to reset interview'));
+        $('#endSessionBtn').click(function() {
+            if (confirm("Are you sure you want to end the interview session?")) {
+                $.ajax({
+                    url: '/reset_interview',
+                    type: 'POST',
+                    success: function() {
+                        interviewComplete();
+                    },
+                    error: function(xhr) {
+                        alert('Error: ' + (xhr.responseJSON?.message || 'Failed to reset interview'));
+                    }
+                });
             }
         });
-    }
-});
 
         // Restart interview button click handler
         $('#restartInterviewBtn').click(function() {
@@ -905,39 +818,22 @@ $('#endSessionBtn').click(function() {
             conversationBox.scrollTop(conversationBox[0].scrollHeight);
         }
 
-        // // Add user message
-        // function addUserMessage(message) {
-        //     const conversationBox = $('#conversationBox');
-        //     const existingMessage = conversationBox.find(`.user-message[data-question="${currentQuestionNum}"]`);
-        //     if (existingMessage.length) {
-        //         existingMessage.html(`<strong>You:</strong> ${message}`);
-        //     } else {
-        //         conversationBox.append(`
-        //             <div class="user-message" data-question="${currentQuestionNum}">
-        //                 <strong>You:</strong> ${message}
-        //             </div>
-        //         `);
-        //     }
-        //     conversationBox.scrollTop(conversationBox[0].scrollHeight);
-        // }
-// Add user message
-function addUserMessage(message) {
-    const conversationBox = $('#conversationBox');
-    const existingMessage = conversationBox.find(`.user-message[data-question="${currentQuestionNum}"][data-answer="current"]`);
-    
-    if (existingMessage.length) {
-        // Update existing message for the current answer
-        existingMessage.html(`<strong>You:</strong> ${message}`);
-    } else {
-        // Create new message for the current answer
-        conversationBox.append(`
-            <div class="user-message" data-question="${currentQuestionNum}" data-answer="current">
-                <strong>You:</strong> ${message}
-            </div>
-        `);
-    }
-    conversationBox.scrollTop(conversationBox[0].scrollHeight);
-}
+        // Add user message
+        function addUserMessage(message) {
+            const conversationBox = $('#conversationBox');
+            const existingMessage = conversationBox.find(`.user-message[data-question="${currentQuestionNum}"]`);
+            if (existingMessage.length) {
+                existingMessage.html(`<strong>You:</strong> ${message}`);
+            } else {
+                conversationBox.append(`
+                    <div class="user-message" data-question="${currentQuestionNum}">
+                        <strong>You:</strong> ${message}
+                    </div>
+                `);
+            }
+            conversationBox.scrollTop(conversationBox[0].scrollHeight);
+        }
+
         // Show interview report
         function showInterviewReport() {
             if (reportModalOpen) return;
