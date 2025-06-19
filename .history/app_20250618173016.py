@@ -1285,23 +1285,14 @@ def generate_report():
     return jsonify(report)
 
 
-# @app.route('/reset_interview', methods=['POST'])
-# def reset_interview():
-#     logger.info("Interview reset request received")
-#     session.clear()
-#     session['interview_data'] = init_interview_data()
-#     return jsonify({"status": "success", "message": "Interview reset successfully"})
-
 @app.route('/reset_interview', methods=['POST'])
 def reset_interview():
     logger.info("Interview reset request received")
-    # Clear specific keys rather than entire session
-    keys_to_clear = ['interview_data', 'resume_text', 'jd_text', 'organization_name', 
-                    'job_title', 'email', 'candidate_name']
-    for key in keys_to_clear:
-        session.pop(key, None)
+    session.clear()
     session['interview_data'] = init_interview_data()
     return jsonify({"status": "success", "message": "Interview reset successfully"})
+
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
