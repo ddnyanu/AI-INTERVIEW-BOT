@@ -572,19 +572,7 @@ def evaluate_response(answer, question, role, experience_level, visual_feedback=
         logger.debug("Short but acceptable answer, returning 4")
         return 4
 
-    # Construct the evaluation prompt for Cohere
-    # rating_prompt = f"""
-    # Analyze this interview response for a {role} position ({experience_level} candidate).
-    # Question: "{question}"
-    # Answer: "{answer}"
 
-    # Provide ONLY a numeric rating from 1-10 based on:
-    # - Relevance to question (20%)
-    # - Depth of knowledge (30%)
-    # - Clarity of communication (20%)
-    # - Specific examples provided (20%)
-    # - Professionalism (10%)
-    # """
     rating_prompt = f"""
 You are assessing an interview response for a {role} position from a {experience_level} candidate.
 
@@ -674,7 +662,209 @@ Only return the output in the following strict *JSON format*:
         return 5  # Default rating in case of an error
 
 
-# Function to generate the interview report
+
+
+# # Function to generate the interview report
+# def generate_interview_report(interview_data):
+#     try:
+#         # Calculate interview duration
+#         duration = "N/A"
+#         if interview_data['start_time'] and interview_data['end_time']:
+#             duration_seconds = (interview_data['end_time'] - interview_data['start_time']).total_seconds()
+#             minutes = int(duration_seconds // 60)
+#             seconds = int(duration_seconds % 60)
+#             duration = f"{minutes}m {seconds}s"
+        
+#         # Calculate average rating
+#         avg_rating = sum(interview_data['ratings']) / len(interview_data['ratings']) if interview_data['ratings'] else 0
+        
+#         # Determine status based on average rating
+#         if avg_rating >= 7:
+#             status = "Selected"
+#             status_class = "selected"
+#         elif avg_rating >= 4 and avg_rating < 7:
+#             status = "On Hold"
+#             status_class = "onhold"
+#         else:
+#             status = "Rejected"
+#             status_class = "rejected"
+        
+#         # Prepare conversation history for analysis
+#         conversation_history_text = "\n".join([f"{item['speaker']}: {item['text']}" for item in interview_data['conversation_history'] if 'speaker' in item])
+        
+#         # Generate comprehensive report using Cohere
+#         # report_prompt = f"""
+#         # Analyze this interview transcript and generate a detailed report for a {interview_data['role']} position candidate.
+        
+#         # Candidate Background:
+#         # - Experience Level: {interview_data['experience_level']}
+#         # - Years of Experience: {interview_data['years_experience']}
+#         # - Interview Duration: {duration}
+#         # - Average Rating: {avg_rating:.1f}/10
+        
+#         # Interview Transcript:
+#         # {conversation_history_text}
+        
+#         # Please provide a comprehensive report with the following sections:
+#         # 1. Interview Summary (brief overview)
+#         # 2. Key Strengths (3 specific strengths with examples from answers)
+#         # 3. Areas for Improvement (3 specific areas with actionable suggestions)
+#         # 4. Overall Recommendation (Selected/On Hold/Rejected)
+#         # 5. Voice Feedback Script (a concise 5-6 line summary in conversational tone)
+        
+#         # Format the report in HTML with appropriate headings and styling.
+#         # Include tables for strengths and improvements with two columns (Aspect, Evidence/Suggestion).
+#         # """
+#         report_prompt = f"""
+# You are an expert AI HR assistant responsible for generating professional interview evaluation reports.
+
+# The following interview was conducted for the role of {interview_data['role']}.
+
+# ### Candidate Overview:
+# - 🎓 Experience Level: {interview_data['experience_level']}
+# - 🕒 Years of Experience: {interview_data['years_experience']}
+# - ⏱ Interview Duration: {duration}
+# - ⭐ Average Interviewer Rating: {avg_rating:.1f}/10
+
+# ### 📜 Interview Transcript:
+# {conversation_history_text}
+
+# ---
+
+# ## 🎯 Your Task:
+# Generate a detailed interview evaluation report using the transcript and rating context.
+
+# Format the output in clean HTML with semantic structure, using <h2>, <table>, and <div>.
+
+# ✅ Include the following 5 sections:
+
+# ---
+
+# ### 1. <h2>Interview Summary</h2>
+# - Provide a concise overview of how the interview went.
+# - Mention how well the candidate communicated, handled technical questions, and overall impression.
+
+# ---
+
+# ### 2. <h2>Key Strengths</h2>
+# Show a table with 2 columns:
+# - Aspect (e.g., Problem Solving, Communication, Domain Expertise)
+# - Evidence from Responses (quote or summarize a relevant answer)
+
+# ---
+
+# ### 3. <h2>Areas for Improvement</h2>
+# Show a table with 2 columns:
+# - Aspect to Improve (e.g., Confidence, Project Depth)
+# - Suggestion or Evidence (recommend actionable feedback)
+
+# ---
+
+# ### 4. <h2>Visual Analysis</h2>
+# # Use Unicode/emoji-based pie-style visualizations for the following (each as a separate block):
+# # - Interview Round Ratings (e.g., Round 1: 8/10 )
+# # - Skill Balance Pie:
+# #   - Technical Skills 🛠 — (e.g., ██████████ 80%)
+# #   - Communication 🗣 — (e.g., ████████ 65%)
+# #   - Behavioral Fit 🤝 — (e.g., █████████ 75%)
+
+# # Use HTML <div> or <ul> for layout, no CSS or JS.
+#    <h2>Visual Analysis</h2>
+
+# <div style="text-align: center;">
+#   <h4>Skill Distribution</h4>
+#   <svg width="200" height="200" viewBox="0 0 32 32">
+#     <circle r="16" cx="16" cy="16" fill="#eee" />
+#     <!-- Technical 50% -->
+#     <path d="M16 16 L16 0 A16 16 0 0 1 31.5 10 Z" fill="#4CAF50"></path>
+#     <!-- Communication 30% -->
+#     <path d="M16 16 L31.5 10 A16 16 0 0 1 25 28 Z" fill="#2196F3"></path>
+#     <!-- Behavioral 20% -->
+#     <path d="M16 16 L25 28 A16 16 0 0 1 16 0 Z" fill="#FFC107"></path>
+#   </svg>
+#   <div style="font-size: 14px; margin-top: 10px;">
+#     <p><span style="color:#4CAF50;">●</span> Technical: 50%</p>
+#     <p><span style="color:#2196F3;">●</span> Communication: 30%</p>
+#     <p><span style="color:#FFC107;">●</span> Behavioral: 20%</p>
+#   </div>
+# </div>
+# ---
+
+# ### 5. <h2>Overall Recommendation</h2>
+# Clearly state whether the candidate is:
+# - ✅ Selected
+# - ⏳ On Hold
+# - ❌ Rejected
+
+# Also, explain why using just 2-3 crisp bullet points.
+
+# Return the entire content as pure HTML.
+# Do not add external CSS or scripts.
+# """
+#         logger.debug("Sending report generation request to Cohere")
+
+#       # Send the report prompt to Cohere for report generation
+#         response = co.generate(
+#             model="command-r-plus",  # Replace with the appropriate model for your task
+#             prompt=report_prompt,
+#             max_tokens=2000,
+#             temperature=0.5
+#         )
+        
+#         report_content = response.generations[0].text  # Access the generated report content from Cohere
+#         logger.debug("Received report content from Cohere")
+        
+#         # Generate voice feedback from the report using Cohere
+#         voice_feedback_prompt = f"""
+#         Extract or create a concise 5-6 line voice feedback summary from this interview report:
+#         {report_content}
+        
+#         The feedback should:
+#         - Be spoken in a natural, conversational tone
+#         - Highlight the key conclusions
+#         - Be encouraging but honest
+#         - Be exactly 5-6 lines long
+#         """
+        
+#         # Log the request to Cohere for voice feedback generation
+#         logger.debug("Sending voice feedback generation request to Cohere")
+        
+#         # Send the voice feedback prompt to Cohere for generation
+#         voice_response = co.generate(
+#             model="command-r-plus",  # Replace with the appropriate model for your task
+#             prompt=voice_feedback_prompt,
+#             max_tokens=300,
+#             temperature=0.5
+#         )
+        
+#         voice_feedback = voice_response.generations[0].text.strip()  # Get the voice feedback text from Cohere
+#         logger.debug(f"Generated voice feedback: {voice_feedback}")
+        
+#         # Convert voice feedback to audio
+#         logger.debug("Converting voice feedback to audio")
+#         voice_audio = text_to_speech(voice_feedback)
+        
+#         return {
+#             "status": "success",
+#             "report": report_content,
+#             "voice_feedback": voice_feedback,
+#             "voice_audio": voice_audio,
+#             "status_class": status_class,
+#             "avg_rating": avg_rating,
+#             "duration": duration
+#         }
+    
+#     except Exception as e:
+#         logger.error(f"Error generating report: {str(e)}", exc_info=True)
+#         return {
+#             "status": "error",
+#             "message": str(e),
+#             "report": "<p>Error generating report. Please try again.</p>",
+#             "voice_feedback": "We encountered an error generating your feedback.",
+#             "voice_audio": None
+#         }
+
+
 def generate_interview_report(interview_data):
     try:
         # Calculate interview duration
@@ -686,7 +876,9 @@ def generate_interview_report(interview_data):
             duration = f"{minutes}m {seconds}s"
         
         # Calculate average rating
-        avg_rating = sum(interview_data['ratings']) / len(interview_data['ratings']) if interview_data['ratings'] else 0
+        ratings = interview_data.get('ratings', [])
+        avg_rating = sum(ratings) / len(ratings) if ratings else 0
+        logger.debug(f"Average rating: {avg_rating:.1f}, based on {len(ratings)} ratings")
         
         # Determine status based on average rating
         if avg_rating >= 7:
@@ -699,32 +891,69 @@ def generate_interview_report(interview_data):
             status = "Rejected"
             status_class = "rejected"
         
-        # Prepare conversation history for analysis
+        # Calculate skill distribution
+        questions = interview_data.get('questions', [])
+        question_topics = interview_data.get('question_topics', [])
+        ratings = interview_data.get('ratings', [])
+        
+        technical_scores = []
+        communication_scores = []
+        behavioral_scores = []
+
+        # Categorize ratings based on question types
+        for i, (question, topic, rating) in enumerate(zip(questions, question_topics, ratings)):
+            # More precise categorization using topic (assuming topics are descriptive)
+            topic_lower = topic.lower() if topic else ""
+            if "technical" in topic_lower or i < 10:  # Fallback to index-based for compatibility
+                technical_scores.append(rating)
+            elif "experience" in topic_lower or "role" in topic_lower or i < 15:
+                behavioral_scores.append(rating)
+            communication_scores.append(rating * 0.4)  # Proxy for communication (clarity/professionalism)
+
+        # Calculate average scores with fallback
+        technical_avg = sum(technical_scores) / len(technical_scores) if technical_scores else 5
+        behavioral_avg = sum(behavioral_scores) / len(behavioral_scores) if behavioral_scores else 5
+        communication_avg = sum(communication_scores) / len(communication_scores) if communication_scores else 5
+        logger.debug(f"Skill averages - Technical: {technical_avg:.1f}, Communication: {communication_avg:.1f}, Behavioral: {behavioral_avg:.1f}")
+
+        # Normalize to percentages with safeguard
+        total = max(technical_avg + communication_avg + behavioral_avg, 0.01)  # Avoid division by zero
+        technical_pct = (technical_avg / total) * 100 if total > 0 else 33.33
+        communication_pct = (communication_avg / total) * 100 if total > 0 else 33.33
+        behavioral_pct = 100 - technical_pct - communication_pct  # Ensure sum is 100%
+        logger.debug(f"Skill percentages - Technical: {technical_pct:.1f}%, Communication: {communication_pct:.1f}%, Behavioral: {behavioral_pct:.1f}%")
+
+        # Generate bar chart HTML
+        bar_chart_html = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 20px auto;">
+            <h4 style="text-align: center;">Skill Distribution</h4>
+            <div style="margin-bottom: 15px;">
+                <span style="display: inline-block; width: 120px; font-weight: bold;">Technical 🛠</span>
+                <div style="display: inline-block; width: 200px; background-color: #e0e0e0; border-radius: 5px; overflow: hidden;">
+                    <div style="width: {min(technical_pct, 100)}%; background-color: #4CAF50; height: 20px;"></div>
+                </div>
+                <span style="margin-left: 10px;">{technical_pct:.1f}%</span>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <span style="display: inline-block; width: 120px; font-weight: bold;">Communication 🗣</span>
+                <div style="display: inline-block; width: 200px; background-color: #e0e0e0; border-radius: 5px; overflow: hidden;">
+                    <div style="width: {min(communication_pct, 100)}%; background-color: #2196F3; height: 20px;"></div>
+                </div>
+                <span style="margin-left: 10px;">{communication_pct:.1f}%</span>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <span style="display: inline-block; width: 120px; font-weight: bold;">Behavioral 🤝</span>
+                <div style="display: inline-block; width: 200px; background-color: #e0e0e0; border-radius: 5px; overflow: hidden;">
+                    <div style="width: {min(behavioral_pct, 100)}%; background-color: #FFC107; height: 20px;"></div>
+                </div>
+                <span style="margin-left: 10px;">{behavioral_pct:.1f}%</span>
+            </div>
+        </div>
+        """
+
+        # Prepare conversation history
         conversation_history_text = "\n".join([f"{item['speaker']}: {item['text']}" for item in interview_data['conversation_history'] if 'speaker' in item])
         
-        # Generate comprehensive report using Cohere
-        # report_prompt = f"""
-        # Analyze this interview transcript and generate a detailed report for a {interview_data['role']} position candidate.
-        
-        # Candidate Background:
-        # - Experience Level: {interview_data['experience_level']}
-        # - Years of Experience: {interview_data['years_experience']}
-        # - Interview Duration: {duration}
-        # - Average Rating: {avg_rating:.1f}/10
-        
-        # Interview Transcript:
-        # {conversation_history_text}
-        
-        # Please provide a comprehensive report with the following sections:
-        # 1. Interview Summary (brief overview)
-        # 2. Key Strengths (3 specific strengths with examples from answers)
-        # 3. Areas for Improvement (3 specific areas with actionable suggestions)
-        # 4. Overall Recommendation (Selected/On Hold/Rejected)
-        # 5. Voice Feedback Script (a concise 5-6 line summary in conversational tone)
-        
-        # Format the report in HTML with appropriate headings and styling.
-        # Include tables for strengths and improvements with two columns (Aspect, Evidence/Suggestion).
-        # """
         report_prompt = f"""
 You are an expert AI HR assistant responsible for generating professional interview evaluation reports.
 
@@ -771,33 +1000,16 @@ Show a table with 2 columns:
 ---
 
 ### 4. <h2>Visual Analysis</h2>
-# Use Unicode/emoji-based pie-style visualizations for the following (each as a separate block):
-# - Interview Round Ratings (e.g., Round 1: 8/10 )
-# - Skill Balance Pie:
-#   - Technical Skills 🛠 — (e.g., ██████████ 80%)
-#   - Communication 🗣 — (e.g., ████████ 65%)
-#   - Behavioral Fit 🤝 — (e.g., █████████ 75%)
+Include the following:
+- Interview Round Ratings (list each question's rating, e.g., Question 1: 8/10)
+- Skill Balance Bar Chart:
+  - Technical Skills  — {technical_pct:.1f}%
+  - Communication  — {communication_pct:.1f}%
+  - Behavioral Fit  — {behavioral_pct:.1f}
 
-# Use HTML <div> or <ul> for layout, no CSS or JS.
-   <h2>Visual Analysis</h2>
+Use the provided HTML for the bar chart:
+{bar_chart_html}
 
-<div style="text-align: center;">
-  <h4>Skill Distribution</h4>
-  <svg width="200" height="200" viewBox="0 0 32 32">
-    <circle r="16" cx="16" cy="16" fill="#eee" />
-    <!-- Technical 50% -->
-    <path d="M16 16 L16 0 A16 16 0 0 1 31.5 10 Z" fill="#4CAF50"></path>
-    <!-- Communication 30% -->
-    <path d="M16 16 L31.5 10 A16 16 0 0 1 25 28 Z" fill="#2196F3"></path>
-    <!-- Behavioral 20% -->
-    <path d="M16 16 L25 28 A16 16 0 0 1 16 0 Z" fill="#FFC107"></path>
-  </svg>
-  <div style="font-size: 14px; margin-top: 10px;">
-    <p><span style="color:#4CAF50;">●</span> Technical: 50%</p>
-    <p><span style="color:#2196F3;">●</span> Communication: 30%</p>
-    <p><span style="color:#FFC107;">●</span> Behavioral: 20%</p>
-  </div>
-</div>
 ---
 
 ### 5. <h2>Overall Recommendation</h2>
@@ -813,41 +1025,37 @@ Do not add external CSS or scripts.
 """
         logger.debug("Sending report generation request to Cohere")
 
-      # Send the report prompt to Cohere for report generation
+        # Send the report prompt to Cohere
         response = co.generate(
-            model="command-r-plus",  # Replace with the appropriate model for your task
+            model="command-r-plus",
             prompt=report_prompt,
             max_tokens=2000,
             temperature=0.5
         )
         
-        report_content = response.generations[0].text  # Access the generated report content from Cohere
+        report_content = response.generations[0].text
         logger.debug("Received report content from Cohere")
         
-        # Generate voice feedback from the report using Cohere
+        # Generate voice feedback
         voice_feedback_prompt = f"""
-        Extract or create a concise 5-6 line voice feedback summary from this interview report:
-        {report_content}
-        
-        The feedback should:
-        - Be spoken in a natural, conversational tone
-        - Highlight the key conclusions
-        - Be encouraging but honest
-        - Be exactly 5-6 lines long
-        """
-        
-        # Log the request to Cohere for voice feedback generation
+Extract or create a concise 5-6 line voice feedback summary from this interview report:
+{report_content}
+
+The feedback should:
+- Be spoken in a natural, conversational tone
+- Highlight the key conclusions
+- Be encouraging but honest
+- Be exactly 5-6 lines long
+"""
         logger.debug("Sending voice feedback generation request to Cohere")
-        
-        # Send the voice feedback prompt to Cohere for generation
         voice_response = co.generate(
-            model="command-r-plus",  # Replace with the appropriate model for your task
+            model="command-r-plus",
             prompt=voice_feedback_prompt,
             max_tokens=300,
             temperature=0.5
         )
         
-        voice_feedback = voice_response.generations[0].text.strip()  # Get the voice feedback text from Cohere
+        voice_feedback = voice_response.generations[0].text.strip()
         logger.debug(f"Generated voice feedback: {voice_feedback}")
         
         # Convert voice feedback to audio
@@ -873,6 +1081,9 @@ Do not add external CSS or scripts.
             "voice_feedback": "We encountered an error generating your feedback.",
             "voice_audio": None
         }
+
+
+
 class JSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (datetime, np.integer)):
