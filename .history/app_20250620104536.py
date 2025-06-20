@@ -1287,54 +1287,27 @@ def generate_report():
     # ✅ Generate user report for frontend
     report = generate_interview_report(interview_data)
     logger.info("Interview report generated")
-    
-    # ✅ Step 2: Convert HTML report to PDFAdd commentMore actions
-    try:
-        pdf_binary = pdfkit.from_string(report["report"], False)  # False = return PDF as bytes
-        logger.info("PDF generated successfully")
-    except Exception as e:
-        logger.error(f"PDF generation failed: {e}")
-    html_report = report.get("report", "")
-    if report["status"] == "error":
-        return jsonify(report), 500
-    
-
-    pdf_binary = html_to_pdf(html_report)
-    if not pdf_binary:
-        logger.error("PDF generation failed")
-        return jsonify({"status": "error", "message": "PDF generation failed"}), 500
-    
-
-
-    # ✅ Step 3: Prepare JSON + Base64 PDF for Django
-    django_payload = {
-        "candidate_name": interview_data["candidate_name"],
-        "role": interview_data["job_title"],
-        "organization_name": interview_data["organization_name"],
-        "years_experience": interview_data["years_experience"],
-        "start_time": interview_data["start_time"].isoformat(),
-        "end_time": interview_data["end_time"].isoformat(),
-        "average_rating": report["avg_rating"],
-        "status": report["status_class"].capitalize(),  # "Selected", "On Hold", etc.
-        "report_text": report["report"],
-        "report_text": html_report,
-        "pdf_file": base64.b64encode(pdf_binary).decode("utf-8")
-    }
-
-    # ✅ Step 4: Send to Django backend
-    try:
-        django_url = "https://ibot-backend.onrender.com/jobs/store-interview-report/"
-        django_response = requests.post(django_url, json=django_payload, headers={"Content-Type": "application/json"})
-
-        if django_response.status_code == 201:
-            logger.info("Report successfully sent to Django backend")
-        else:
-            logger.warning(f"Failed to save report in Django: {django_response.text}")
-
-    except Exception as e:
-        logger.error(f"Failed to send data to Django: {e}") 
 
     return jsonify(report)
+
+
+# @app.route('/reset_interview', methods=['POST'])
+# def reset_interview():
+#     logger.info("Interview reset request received")
+#     session.clear()
+#     session['interview_data'] = init_interview_data()
+#     return jsonify({"status": "success", "message": "Interview reset successfully"})
+
+@app.route('/reset_interview', methods=['POST'])
+def reset_interview():
+    logger.info("Interview reset request received")
+    # Clear specific keys rather than entire session
+    keys_to_clear = ['interview_data', 'resume_text', 'jd_text', 'organization_name', 
+                    'job_title', 'email', 'candidate_name']
+    for key in keys_to_clear:
+        session.pop(key, None)
+    session['interview_data'] = init_interview_data()
+    return jsonify({"status": "success", "message": "Interview reset successfully"})
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -1429,6 +1402,22 @@ End of Report
     return report_txt
 
 
+def save_admin_report_txt(interview_data):
+    report_txt = create_text_report_from_interview_data(interview_data)
+    
+    candidate = interview_data.get("candidate_name", "unknown").replace(" ", "_")
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    filename = f"{candidate}interview_report{timestamp}.txt"
+
+    reports_folder = os.path.join(os.getcwd(), "reports")
+    if not os.path.exists(reports_folder):
+        os.makedirs(reports_folder)
+
+    filepath = os.path.join(reports_folder, filename)
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(report_txt)
+
+    return filepath, filename
 
 
 @app.route('/logout')
