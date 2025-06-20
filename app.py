@@ -986,16 +986,38 @@ Format the output in clean HTML with semantic structure, using <h2>, <table>, an
 ---
 
 ### 2. <h2>Key Strengths</h2>
-Show a table with 2 columns:
-- Aspect (e.g., Problem Solving, Communication, Domain Expertise)
-- Evidence from Responses (quote or summarize a relevant answer)
+- Show a table with exactly 2 columns: 'Aspect' and 'Evidence from Responses'.
+- Include 2-4 rows, each identifying a strength (e.g., Problem Solving, Communication, Domain Expertise) and quoting or summarizing a relevant answer from the transcript.
+- Use the following HTML table structure:
+  <table style="width: 100%; border-collapse: collapse;">
+    <tr style="border: 1px solid #000;">
+      <th style="border: 1px solid #000; padding: 8px;">Aspect</th>
+      <th style="border: 1px solid #000; padding: 8px;">Evidence from Responses</th>
+    </tr>
+    <tr style="border: 1px solid #000;">
+      <td style="border: 1px solid #000; padding: 8px;">[Strength Aspect]</td>
+      <td style="border: 1px solid #000; padding: 8px;">[Quote or Summary]</td>
+    </tr>
+    <!-- Additional rows as needed -->
+  </table>
 
 ---
 
 ### 3. <h2>Areas for Improvement</h2>
-Show a table with 2 columns:
-- Aspect to Improve (e.g., Confidence, Project Depth)
-- Suggestion or Evidence (recommend actionable feedback)
+- Show a table with exactly 2 columns: 'Aspect to Improve' and 'Suggestion or Evidence'.
+- Include 2-4 rows, each identifying an area for improvement (e.g., Confidence, Project Depth) and providing actionable feedback or evidence from the transcript.
+- Use the following HTML table structure:
+  <table style="width: 100%; border-collapse: collapse;">
+    <tr style="border: 1px solid #000;">
+      <th style="border: 1px solid #000; padding: 8px;">Aspect to Improve</th>
+      <th style="border: 1px solid #000; padding: 8px;">Suggestion or Evidence</th>
+    </tr>
+    <tr style="border: 1px solid #000;">
+      <td style="border: 1px solid #000; padding: 8px;">[Improvement Aspect]</td>
+      <td style="border: 1px solid #000; padding: 8px;">[Feedback or Evidence]</td>
+    </tr>
+    <!-- Additional rows as needed -->
+  </table>
 
 ---
 
@@ -1013,15 +1035,20 @@ Use the provided HTML for the bar chart:
 ---
 
 ### 5. <h2>Overall Recommendation</h2>
-Clearly state whether the candidate is:
-- ✅ Selected
-- ⏳ On Hold
-- ❌ Rejected
+- Clearly state whether the candidate is:
+  - ✅ Selected
+  - ⏳ On Hold
+  - ❌ Rejected
+- Explain why using 2-3 crisp bullet points in a <ul> list.
 
-Also, explain why using just 2-3 crisp bullet points.
+---
 
-Return the entire content as pure HTML.
-Do not add external CSS or scripts.
+## Requirements:
+- Return the entire content as pure HTML.
+- Do not add external CSS or scripts.
+- Ensure tables for 'Key Strengths' and 'Areas for Improvement' strictly follow the provided HTML structure with inline CSS.
+- Use <p> tags for text content outside tables.
+- Do not use markdown or other formats; output must be valid HTML.
 """
         logger.debug("Sending report generation request to Cohere")
 
